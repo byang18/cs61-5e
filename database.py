@@ -1,10 +1,11 @@
+# pylint: disable = C0111,C0326,C0103,W0702,C1801
 # Barry Yang and Lily Xu
 # CS 61 Databases
 # Lab 2 part e
 
 from __future__ import print_function       # make print a function
-import mysql.connector                      # mysql functionality
 import sys                                  # for misc errors
+import mysql.connector                      # mysql functionality
 
 SERVER    = "sunapee.cs.dartmouth.edu"      # db server to connect to
 USERNAME  = "byang"                         # user to connect as
@@ -52,7 +53,7 @@ if __name__ == "__main__":
 
     s = raw_input('--> ')
 
-    while (s != "quit"):
+    while s != "quit":
         s = raw_input('--> ')
         parse_input(s)
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
 
 def parse_input(string):
-    tokens = string.strip().split(" ");
+    tokens = string.strip().split(" ")
     if len(tokens) == 0:
         print("Invalid input.")
         return
@@ -79,23 +80,25 @@ def parse_input(string):
         return
 
 
-def login(id):
+def login(person_id):
     # execute login
     # find corresponding id
 
-    # TODO: check if user_id is valid?
-    user_id = int(id)
+    # todo: check if user_id is valid?
+    user_id = int(person_id)
     logged_in = True
     user_type = "author" # or "editor" or "reviewer"
 
     if user_type == "author":
-        print "fname, lname, address\n"
+        print ("fname, lname, address\n")
         status_author()
+
     elif user_type == "editor":
-        print "fname, lname"
+        print ("fname, lname\n")
         status_editor()
+
     elif user_type == "reviewer":
-        print "Welcome back, fname, lname!"
+        print ("Welcome back, fname, lname!\n")
         status_reviewer() # limited to manuscripts assigned to that reviewer
 
 
@@ -111,15 +114,13 @@ def register(tokens):
 
 def register_author(fname, lname, email, address):
     query = "INSERT INTO author VALUES (NULL, fname, lname, email, address);"
-
+    return query
 
 def register_editor(fname, lname):
     query = "INSERT INTO editor VALUES (NULL, fname, lname);"
 
-
 def register_reviewer(fname, lname, ricode1, ricode2, ricode3):
     query = "INSERT INTO reviewer VALUES (NULL, fname, lname, ricode1, ricode2, ricode3);"
-
 
 def process_author(tokens):
     command = tokens[0]
@@ -150,7 +151,7 @@ def process_editor(tokens):
     elif command == "assign":
         manuscript_num = tokens[1]
         reviewer_id = tokens[2]
-        # TODO: assign manuscript to a reviewer 
+        # TODO: assign manuscript to a reviewer
     elif command == "reject":
         manuscript_num = tokens[1]
         # TODO: set manuscript status to rejected and add timestamp
@@ -178,7 +179,7 @@ def process_reviewer(tokens):
         status_reviewer()
     elif command == "resign":
         # prompt to enter unique ID
-        print "Thank you for our service!"
+        print ("Thank you for our service!")
         # TODO: remove user from system (invoke trigger)
     elif command == "reject":
         manuscript_num = tokens[1]
@@ -233,6 +234,3 @@ def status_reviewer():
     print("{} typesetting".format(x))
     print("{} scheduled for publication".format(x))
     print("{} published".format(x))
-
-
-
