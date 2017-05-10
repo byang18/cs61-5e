@@ -8,6 +8,7 @@
 
 import datetime         # print current date
 
+
 # input: con - reference to mySQL connection
 def submit_query(db, query):
     cursor = db.get_cursor()
