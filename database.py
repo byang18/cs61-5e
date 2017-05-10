@@ -1,55 +1,54 @@
-# Barry Yang and Lily Xu
-# CS 61 Databases
-# Lab 2 part e
-
-from __future__ import print_function       # make print a function
 import mysql.connector                      # mysql functionality
 import sys                                  # for misc errors
 
-from database_fxns import *
-
-SERVER    = "sunapee.cs.dartmouth.edu"      # db server to connect to
-USERNAME  = "byang"                         # user to connect as
-PASSWORD  = "7webster"                      # user's password
-DATABASE  = "byang_db"                      # db to user
-query     = "SELECT * FROM feedback;"       # query statement
-logged_in = False
-user_id   = -1                              # current user id
-user_type = None                            # author, editor, or reviewer
-
-if __name__ == "__main__":
-    try:
+class Database:
+    def __init__(self, server, username, password, database):
+    # def __init__(self):
         # initialize db connection
-        con = mysql.connector.connect(host=SERVER,
-                                      user=USERNAME,
-                                      password=PASSWORD,
-                                      database=DATABASE)
+        self.con = mysql.connector.connect(host=server,
+                                           user=username,
+                                           password=password,
+                                           database=database)
 
-        print("Connection established.\n")
+        # initialize a cursor
+        self.cursor = self.con.cursor();
 
-        submit_query(con, query)
+        print("Connected!")
 
+        self.logged_in = False
+        self.user_id   = -1             # current user id
+        self.user_type = None           # author, editor, or reviewer
 
-    except mysql.connector.Error as e:        # catch SQL errors
-        print("SQL Error: {0}".format(e.msg))
+    # def connect(self, server, username, password, database):
+    #     self.con = mysql.connector.connect(host=server,
+    #                                        user=username,
+    #                                        password=password,
+    #                                        database=database)
 
-    except:                                   # anything else
-        print("Unexpected error: {0}".format(sys.exc_info()[0]))
+    #     self.cursor = self.con.cursor();
 
-    s = raw_input('--> ')
+    #     print("Connected!")
 
-    while (s != "quit"):
-        s = raw_input('--> ')
-        parse_input(s)
+    def get_con(self):
+        return self.con
 
+    def get_cursor(self):
+        return self.cursor
 
-    # cleanup
-    con.close()
-    cursor.close()
+    def get_user_id(self):
+        return self.user_id
 
-    print("\nConnection terminated.\n", end='')
+    def get_user_type(self):
+        return self.user_type
 
+    def change_user_id(self, id):
+        self.user_id = int(id)
 
+    def change_user_type(self, type):
+        self.user_type = type
 
+    def log_on(self):
+        self.logged_in = True
 
-
+    def log_off(self):
+        self.logged_in = False
