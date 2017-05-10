@@ -40,7 +40,7 @@ class Database:
     def get_cursor(self):
         return self.cursor
 
-    def get_logged_in(self):
+    def is_logged_in(self):
         return self.logged_in
 
     def get_user_id(self):
