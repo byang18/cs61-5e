@@ -38,8 +38,8 @@ if __name__ == "__main__":
         s = raw_input('--> ')
 
         while (s != 'quit' and s != 'q'):
-            s = raw_input('--> ')
             parse_input(db, s)
+            s = raw_input('--> ')
 
 
     except mysql.connector.Error as e:        # catch SQL errors

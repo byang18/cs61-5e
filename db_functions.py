@@ -6,10 +6,9 @@
 # helper functions for database execution
 
 
-import datetime         # print current date
+import datetime         # get current date
 
 
-# input: con - reference to mySQL connection
 def submit_query(db, query):
     cursor = db.get_cursor()
 
@@ -18,11 +17,11 @@ def submit_query(db, query):
 
     print("Query executed: '{0}'\n\nResults:".format(query))
 
-    # print table header
+    # display table header
     print(''.join(['{:<20}'.format(col) for col in cursor.column_names]))
     print('-' * 170)
 
-    # iterate through results
+    # display results
     for row in cursor:
         print(''.join(['{:<20}'.format(str(col)) for col in row]))
 
@@ -31,16 +30,15 @@ def submit_query(db, query):
 
 # process query, but instead of displaying to user, 
 # return output to the caller
-# each column is delimited by a pipe '|'
-# each row is delimited by a newline '\n'
+# NOTE: each column is delimited by a pipe '|'
+#       each row is delimited by a newline '\n'
 def submit_query_return(db, query):
     cursor = db.get_cursor()
-
     cursor.execute(query)
 
     output = ''
 
-    # iterate through results
+    # display results
     for row in cursor:
         for col in row:
             output += str(col) + '|'
@@ -50,7 +48,10 @@ def submit_query_return(db, query):
 
 
 
-def parse_input(string):
+# parse input from user
+# process command if 'login' or 'register'
+# call appropriate function to process command for author, editor, or reviewer
+def parse_input(db, string):
     tokens = string.strip().split('|');
 
     if len(tokens) == 0:
@@ -59,7 +60,8 @@ def parse_input(string):
 
     # log in user
     if tokens[0] == 'login':
-        login(id)
+        user_id = tokens[1]
+        login(db, user_id)
     # register new user
     elif tokens[0] == 'register':
         register(tokens)
@@ -76,27 +78,36 @@ def parse_input(string):
         print("Invalid input. Please login or register.")
 
 
-def login(db, id):
-    # execute login
-    # find corresponding id
+def login(db, user_id):
+    user_id = int(user_id)
 
-    # TODO: check if user_id is valid?
-    db.change_user_id(int(id))
-    db.change_user_type('author') # or "editor" or "reviewer"
+    # check if user_id is valid
+    query = "SELECT personID FROM person WHERE personID = " + str(user_id) + ';'
+    results = submit_query_return(db, query)
+
+    if results == "":
+        print('ERROR: No user exists corresponding to ID ' + str(user_id) + '.')
+        return
+
+
+    # exeute login
+    db.change_user_id(int(user_id))
+    db.change_user_type('author') # or 'editor' or 'reviewer'
     db.log_on()
 
+    # display greeting
     if db.get_user_type() == 'author':
         # TODO: get user author data
         print("fname, lname, address")
-        status_author()
+        status_author(db, user_id)
     elif db.get_user_type() == 'editor':
         # TODO: get user data
         print("fname, lname")
-        status_editor()
+        status_editor(db, user_id)
     elif db.get_user_type() == 'reviewer':
         # TODO: get user data
         print("Welcome back, fname, lname!")
-        status_reviewer() # limited to manuscripts assigned to that reviewer
+        status_reviewer(db, user_id) # limited to manuscripts assigned to that reviewer
 
 
 def register(db, tokens):

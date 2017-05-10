@@ -20,9 +20,9 @@ class Database:
 
         print("Connected!")
 
-        self.logged_in = False
-        self.user_id   = -1             # current user id
-        self.user_type = None           # author, editor, or reviewer
+        self.logged_in = False          # boolean: whether anyone is logged in
+        self.user_id   = -1             # int: current user id
+        self.user_type = None           # string: author, editor, or reviewer
 
     # def connect(self, server, username, password, database):
     #     self.con = mysql.connector.connect(host=server,
