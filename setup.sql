@@ -556,14 +556,16 @@ GROUP BY manuscriptID;
 
 -- number of manuscripts submitted
 DROP VIEW IF EXISTS authorNumSubmitted;
-select personID, fname, lname, count(manuscriptID)
+CREATE VIEW authorNumSubmitted AS
+SELECT personID, fname, lname, count(manuscriptID)
 FROM LeadAuthorManuscripts
 WHERE `status` = "received"
 GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
 -- number of manuscripts under review
-DROP VIEW IF EXISTS authorNumSubmitted;
+DROP VIEW IF EXISTS authorNumUnderReview;
+CREATE VIEW authorNumUnderReview AS
 select personID, fname, lname, count(manuscriptID)
 FROM LeadAuthorManuscripts
 WHERE `status` = "underReview"
@@ -571,7 +573,8 @@ GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
 -- number of manuscripts rejected
-DROP VIEW IF EXISTS authorNumSubmitted;
+DROP VIEW IF EXISTS authorNumRejected;
+CREATE VIEW authorNumRejected AS
 select personID, fname, lname, count(manuscriptID)
 FROM LeadAuthorManuscripts
 WHERE `status` = "rejected"
@@ -579,14 +582,39 @@ GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
 -- number of manuscripts accepted
-DROP VIEW IF EXISTS authorNumSubmitted;
+DROP VIEW IF EXISTS authorNumAccepted;
+CREATE VIEW authorNumAccepted AS
 select personID, fname, lname, count(manuscriptID)
 FROM LeadAuthorManuscripts
 WHERE `status` = "accepted"
 GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
--- typeset status?
+-- TODO: typeset status?
 
+-- number of manuscripts scheduled
+DROP VIEW IF EXISTS authorNumScheduled;
+CREATE VIEW authorNumScheduled AS
+select personID, fname, lname, count(manuscriptID)
+FROM LeadAuthorManuscripts
+WHERE `status` = "scheduled"
+GROUP BY personID
+ORDER BY count(manuscriptID) desc;
+
+-- number of manuscripts published
+DROP VIEW IF EXISTS authorNumPublished;
+CREATE VIEW authorNumPublished AS
+select personID, fname, lname, count(manuscriptID)
+FROM LeadAuthorManuscripts
+WHERE `status` = "published"
+GROUP BY personID
+ORDER BY count(manuscriptID) desc;
+
+-- individual athor
+DROP VIEW IF EXISTS individualManuscripts;
+CREATE VIEW individualManuscripts AS
+SELECT personID, fname, lname, manuscriptID
+FROM LeadAuthorManuscripts
+WHERE personID = 128; # CHANGE NUMBER 
 
 
