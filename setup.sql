@@ -37,7 +37,7 @@ DROP TABLE IF EXISTS `issue`;
 
 -- person table
 CREATE TABLE IF NOT EXISTS `byang_db`.`person` (
-  `personID` INT NOT NULL,
+  `personID` INT NOT NULL AUTO_INCREMENT,
   `fname` VARCHAR(30) NOT NULL,
   `lname` VARCHAR(30) NOT NULL,
   PRIMARY KEY (`personID`))
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`author` (
   `personID` INT NOT NULL,
   `email` VARCHAR(80) NOT NULL,
   `address` VARCHAR(45) NOT NULL,
-  `affiliation` VARCHAR(45) NOT NULL,
+  `affiliation` VARCHAR(45) NULL,
   PRIMARY KEY (`personID`),
   CONSTRAINT `fk_author_person`
     FOREIGN KEY (`personID`)
@@ -95,7 +95,7 @@ ENGINE = InnoDB;
 
 -- issue table
 CREATE TABLE IF NOT EXISTS `byang_db`.`issue` (
-  `publicationYear` INT NOT NULL,
+  `publicationYear` INT NOT NULL ,
   `periodNumber` INT NOT NULL,
   `datePrinted` DATE NULL,
   PRIMARY KEY (`publicationYear`, `periodNumber`)) 
@@ -104,7 +104,7 @@ ENGINE = InnoDB;
 
 -- manuscript table
 CREATE TABLE IF NOT EXISTS `byang_db`.`manuscript` (
-  `manuscriptID` INT NOT NULL,
+  `manuscriptID` INT NOT NULL AUTO_INCREMENT,
   `author_personID` INT NOT NULL,
   `editor_personID` INT NOT NULL,
   `title` VARCHAR(100) NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`manuscript` (
   `dateAccepted` DATE NULL,
   `issue_publicationYear` INT NULL,
   `issue_periodNumber` INT NULL,
-  PRIMARY KEY (`manuscriptID`, `author_personID`),
+  PRIMARY KEY (`manuscriptID`),
   CONSTRAINT `fk_manuscript_RICode1`
     FOREIGN KEY (`ricodeID`)
     REFERENCES `byang_db`.`RICode` (`RICodeID`)
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`feedback` (
   CONSTRAINT `fk_feedback_manuscript1`
     FOREIGN KEY (`manuscriptID`)
     REFERENCES `byang_db`.`manuscript` (`manuscriptID`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_feedback_reviewer1`
     FOREIGN KEY (`reviewer_personID`)
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`secondaryAuthor` (
   CONSTRAINT `fk_secondaryAuthor_manuscript1`
     FOREIGN KEY (`manuscriptID`)
     REFERENCES `byang_db`.`manuscript` (`manuscriptID`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -396,7 +396,7 @@ INSERT INTO `reviewer_has_RICode` (`reviewer_personID`,`RICode_RICodeID`) VALUES
 
 -- manuscript table
 -- manuscript IDs: 0-59
-INSERT INTO `manuscript` (`manuscriptID`,`author_personID`,`editor_personID`,`title`,`status`,`ricodeID`,`numPages`,`startingPage`,`issueOrder`,`dateReceived`,`dateSentForReview`,`dateAccepted`,`issue_publicationYear`,`issue_periodNumber`) VALUES (0,111,301,"metus urna convallis erat, eget tincidunt dui augue eu tellus.","received",2,NULL,NULL,NULL,"2016-09-15",NULL,NULL,NULL,NULL),(1,129,303,"vitae diam. Proin dolor. Nulla semper tellus id nunc","received",98,NULL,NULL,NULL,"2017-05-03",NULL,NULL,NULL,NULL),(2,102,307,"arcu. Vestibulum ut eros non enim commodo hendrerit. Donec porttitor","received",39,NULL,NULL,NULL,"2017-02-08",NULL,NULL,NULL,NULL),(3,113,301,"enim. Mauris quis turpis vitae purus gravida","received",7,NULL,NULL,NULL,"2015-01-27",NULL,NULL,NULL,NULL),(4,118,307,"congue, elit sed consequat auctor, nunc nulla vulputate dui,","received",68,NULL,NULL,NULL,"2017-07-04",NULL,NULL,NULL,NULL),(5,115,301,"bibendum sed, est. Nunc laoreet lectus","received",93,NULL,NULL,NULL,"2018-01-15",NULL,NULL,NULL,NULL),(6,121,302,"tempor arcu. Vestibulum ut eros non enim commodo hendrerit. Donec","received",4,NULL,NULL,NULL,"2017-08-03",NULL,NULL,NULL,NULL),(7,117,301,"erat vitae risus. Duis a mi fringilla","received",68,NULL,NULL,NULL,"2014-08-02",NULL,NULL,NULL,NULL),(8,125,306,"interdum. Nunc sollicitudin commodo ipsum. Suspendisse non leo. Vivamus","received",82,NULL,NULL,NULL,"2017-01-16",NULL,NULL,NULL,NULL),(9,129,307,"tellus lorem eu metus. In lorem.","received",26,NULL,NULL,NULL,"2015-04-18",NULL,NULL,NULL,NULL);
+INSERT INTO `manuscript` (`manuscriptID`,`author_personID`,`editor_personID`,`title`,`status`,`ricodeID`,`numPages`,`startingPage`,`issueOrder`,`dateReceived`,`dateSentForReview`,`dateAccepted`,`issue_publicationYear`,`issue_periodNumber`) VALUES (0,111,301,"metus urna convallis erat, eget tincidunt dui augue eu tellus.","received",2,NULL,NULL,NULL,"2016-09-15",NULL,NULL,NULL,NULL),(2,102,307,"arcu. Vestibulum ut eros non enim commodo hendrerit. Donec porttitor","received",39,NULL,NULL,NULL,"2017-02-08",NULL,NULL,NULL,NULL),(3,113,301,"enim. Mauris quis turpis vitae purus gravida","received",7,NULL,NULL,NULL,"2015-01-27",NULL,NULL,NULL,NULL),(4,118,307,"congue, elit sed consequat auctor, nunc nulla vulputate dui,","received",68,NULL,NULL,NULL,"2017-07-04",NULL,NULL,NULL,NULL),(5,115,301,"bibendum sed, est. Nunc laoreet lectus","received",93,NULL,NULL,NULL,"2018-01-15",NULL,NULL,NULL,NULL),(6,121,302,"tempor arcu. Vestibulum ut eros non enim commodo hendrerit. Donec","received",4,NULL,NULL,NULL,"2017-08-03",NULL,NULL,NULL,NULL),(7,117,301,"erat vitae risus. Duis a mi fringilla","received",68,NULL,NULL,NULL,"2014-08-02",NULL,NULL,NULL,NULL),(8,125,306,"interdum. Nunc sollicitudin commodo ipsum. Suspendisse non leo. Vivamus","received",82,NULL,NULL,NULL,"2017-01-16",NULL,NULL,NULL,NULL),(9,129,307,"tellus lorem eu metus. In lorem.","received",26,NULL,NULL,NULL,"2015-04-18",NULL,NULL,NULL,NULL);
 INSERT INTO `manuscript` (`manuscriptID`,`author_personID`,`editor_personID`,`title`,`status`,`ricodeID`,`numPages`,`startingPage`,`issueOrder`,`dateReceived`,`dateSentForReview`,`dateAccepted`,`issue_publicationYear`,`issue_periodNumber`) VALUES (10,109,304,"diam dictum sapien. Aenean massa. Integer vitae","received",4,NULL,NULL,NULL,"2015-02-03",NULL,NULL,NULL,NULL),(11,120,301,"mauris blandit mattis. Cras eget nisi dictum augue malesuada","received",93,NULL,NULL,NULL,"2016-08-15",NULL,NULL,NULL,NULL),(12,116,302,"Suspendisse eleifend. Cras sed leo. Cras vehicula aliquet","received",26,NULL,NULL,NULL,"2017-06-01",NULL,NULL,NULL,NULL),(13,119,305,"augue id ante dictum cursus. Nunc mauris elit, dictum","received",68,NULL,NULL,NULL,"2018-04-21",NULL,NULL,NULL,NULL),(14,105,309,"nunc. In at pede. Cras vulputate velit","received",83,NULL,NULL,NULL,"2015-10-10",NULL,NULL,NULL,NULL),(15,129,308,"libero. Integer in magna. Phasellus dolor elit, pellentesque","received",91,NULL,NULL,NULL,"2014-11-12",NULL,NULL,NULL,NULL),(16,116,307,"leo, in lobortis tellus justo sit amet nulla.","received",39,NULL,NULL,NULL,"2015-04-12",NULL,NULL,NULL,NULL),(17,122,306,"risus. Nunc ac sem ut dolor dapibus gravida.","received",17,NULL,NULL,NULL,"2014-05-03",NULL,NULL,NULL,NULL),(18,114,305,"libero est, congue a, aliquet vel, vulputate eu, odio. Phasellus","received",50,NULL,NULL,NULL,"2016-02-16",NULL,NULL,NULL,NULL),(19,125,304,"ornare placerat, orci lacus vestibulum lorem, sit amet ultricies","received",54,NULL,NULL,NULL,"2018-04-05",NULL,NULL,NULL,NULL);
 INSERT INTO `manuscript` (`manuscriptID`,`author_personID`,`editor_personID`,`title`,`status`,`ricodeID`,`numPages`,`startingPage`,`issueOrder`,`dateReceived`,`dateSentForReview`,`dateAccepted`,`issue_publicationYear`,`issue_periodNumber`) VALUES (20,101,309,"ut odio vel est tempor bibendum. Donec","rejected",7,NULL,NULL,NULL,"2016-06-11",NULL,NULL,NULL,NULL),(21,123,308,"enim nec tempus scelerisque, lorem ipsum sodales purus, in","rejected",82,NULL,NULL,NULL,"2017-12-21",NULL,NULL,NULL,NULL),(22,113,307,"enim non nisi. Aenean eget metus. In nec","rejected",50,NULL,NULL,NULL,"2017-11-26",NULL,NULL,NULL,NULL),(23,125,302,"gravida mauris ut mi. Duis risus odio,","rejected",84,NULL,NULL,NULL,"2015-03-13",NULL,NULL,NULL,NULL),(24,101,309,"sociis natoque penatibus et magnis dis parturient montes, nascetur","rejected",91,NULL,NULL,NULL,"2015-05-22",NULL,NULL,NULL,NULL),(25,100,302,"nulla vulputate dui, nec tempus mauris erat eget","rejected",93,NULL,NULL,NULL,"2014-12-30",NULL,NULL,NULL,NULL),(26,104,300,"turpis vitae purus gravida sagittis. Duis gravida. Praesent eu","rejected",54,NULL,NULL,NULL,"2017-01-02",NULL,NULL,NULL,NULL),(27,106,306,"sapien imperdiet ornare. In faucibus. Morbi","rejected",98,NULL,NULL,NULL,"2016-06-05",NULL,NULL,NULL,NULL),(28,109,309,"Nunc ac sem ut dolor dapibus gravida. Aliquam","rejected",82,NULL,NULL,NULL,"2014-06-10",NULL,NULL,NULL,NULL),(29,125,309,"lorem ut aliquam iaculis, lacus pede sagittis augue,","rejected",50,NULL,NULL,NULL,"2015-03-09",NULL,NULL,NULL,NULL);
 INSERT INTO `manuscript` (`manuscriptID`,`author_personID`,`editor_personID`,`title`,`status`,`ricodeID`,`numPages`,`startingPage`,`issueOrder`,`dateReceived`,`dateSentForReview`,`dateAccepted`,`issue_publicationYear`,`issue_periodNumber`) VALUES (30,117,308,"fermentum fermentum arcu. Vestibulum ante ipsum primis in faucibus orci","underReview",50,2,8,4,"2016-01-15","2015-04-14",NULL,NULL,NULL),(31,123,307,"vitae odio sagittis semper. Nam tempor diam dictum","underReview",48,2,27,9,"2017-11-30","2016-02-02",NULL,NULL,NULL),(32,123,303,"felis, adipiscing fringilla, porttitor vulputate, posuere vulputate, lacus. Cras","underReview",22,3,27,9,"2017-12-05","2015-10-01",NULL,NULL,NULL),(33,109,300,"magna, malesuada vel, convallis in, cursus","underReview",4,2,54,1,"2017-10-26","2016-09-16",NULL,NULL,NULL),(34,119,304,"at, velit. Cras lorem lorem, luctus ut, pellentesque","underReview",93,3,38,9,"2014-08-15","2014-10-28",NULL,NULL,NULL),(35,128,308,"lacus, varius et, euismod et, commodo","underReview",26,2,53,6,"2015-06-23","2015-04-04",NULL,NULL,NULL),(36,103,305,"lacinia mattis. Integer eu lacus. Quisque imperdiet, erat","underReview",7,4,50,3,"2014-11-18","2017-03-23",NULL,NULL,NULL),(37,111,308,"dolor. Fusce mi lorem, vehicula et, rutrum eu,","underReview",39,4,41,2,"2016-03-29","2015-11-17",NULL,NULL,NULL),(38,116,301,"dui. Cum sociis natoque penatibus et","underReview",83,3,80,4,"2016-05-30","2017-01-08",NULL,NULL,NULL),(39,118,303,"ut mi. Duis risus odio, auctor","underReview",17,2,61,9,"2017-04-12","2016-02-25",NULL,NULL,NULL);
@@ -557,7 +557,7 @@ GROUP BY manuscriptID;
 -- number of manuscripts submitted
 DROP VIEW IF EXISTS authorNumSubmitted;
 CREATE VIEW authorNumSubmitted AS
-SELECT personID, fname, lname, count(manuscriptID)
+SELECT personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "received"
 GROUP BY personID
@@ -566,7 +566,7 @@ ORDER BY count(manuscriptID) desc;
 -- number of manuscripts under review
 DROP VIEW IF EXISTS authorNumUnderReview;
 CREATE VIEW authorNumUnderReview AS
-select personID, fname, lname, count(manuscriptID)
+select personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "underReview"
 GROUP BY personID
@@ -575,7 +575,7 @@ ORDER BY count(manuscriptID) desc;
 -- number of manuscripts rejected
 DROP VIEW IF EXISTS authorNumRejected;
 CREATE VIEW authorNumRejected AS
-select personID, fname, lname, count(manuscriptID)
+select personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "rejected"
 GROUP BY personID
@@ -584,7 +584,7 @@ ORDER BY count(manuscriptID) desc;
 -- number of manuscripts accepted
 DROP VIEW IF EXISTS authorNumAccepted;
 CREATE VIEW authorNumAccepted AS
-select personID, fname, lname, count(manuscriptID)
+select personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "accepted"
 GROUP BY personID
@@ -595,7 +595,7 @@ ORDER BY count(manuscriptID) desc;
 -- number of manuscripts scheduled
 DROP VIEW IF EXISTS authorNumScheduled;
 CREATE VIEW authorNumScheduled AS
-select personID, fname, lname, count(manuscriptID)
+select personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "scheduled"
 GROUP BY personID
@@ -604,7 +604,7 @@ ORDER BY count(manuscriptID) desc;
 -- number of manuscripts published
 DROP VIEW IF EXISTS authorNumPublished;
 CREATE VIEW authorNumPublished AS
-select personID, fname, lname, count(manuscriptID)
+select personID, fname, lname, count(manuscriptID) AS count
 FROM LeadAuthorManuscripts
 WHERE `status` = "published"
 GROUP BY personID
@@ -616,5 +616,10 @@ CREATE VIEW individualManuscripts AS
 SELECT personID, fname, lname, manuscriptID
 FROM LeadAuthorManuscripts
 WHERE personID = 128; # CHANGE NUMBER 
+
+DROP VIEW IF EXISTS editorNames;
+CREATE VIEW editorNames AS
+SELECT *
+FROM editor NATURAL JOIN person;
 
 

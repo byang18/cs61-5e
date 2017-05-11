@@ -1,67 +1,64 @@
-# pylint: disable=C0111, C0326, W0702, C0103
+# Barry Yang and Lily Xu
+# CS 61 Databases
+# Lab 2 part e
+# May 12, 2017
 
-from __future__ import print_function        # make print a function
-import sys                                   # for misc errors
-import mysql.connector                       # mysql functionality
+import mysql.connector                      # mysql functionality
 
-
-SERVER   = "sunapee.cs.dartmouth.edu"        # db server to connect to
-USERNAME = "byang"                            # user to connect as
-PASSWORD = "7webster"                            # user's password
-DATABASE = "byang_db"                              # db to user
-QUERY    = "SELECT * FROM feedback;"       # query statement
-
-def main():
-    try:
+class Database:
+    def __init__(self, server, username, password, database):
         # initialize db connection
-        con = mysql.connector.connect(host=SERVER,user=USERNAME,password=PASSWORD,
-                                      database=DATABASE)
-        print("Connection established.")
+        self.con = mysql.connector.connect(host=server,
+                                           user=username,
+                                           password=password,
+                                           database=database)
 
         # initialize a cursor
-        cursor = con.cursor()
+        self.cursor = self.con.cursor()
 
-        # query db
-        cursor.execute(QUERY)
+        print("Connected!")
 
-        # print("Query executed: '{0}'\n\nResults:".format(QUERY))
+        self.logged_in = False          # boolean: whether anyone is logged in
+        self.user_id   = -1             # int: current user id
+        self.user_type = None           # string: author, editor, or reviewer
 
-        # print table header
-        # print("".join(["{:<20}".format(col) for col in cursor.column_names]))
-        # print("------------------------------------------------------------------")
+    # def connect(self, server, username, password, database):
+    #     self.con = mysql.connector.connect(host=server,
+    #                                        user=username,
+    #                                        password=password,
+    #                                        database=database)
 
-        # iterate through results
-        # for row in cursor
-        # print("".join(["{:<20}".format(col) for col in row]))
+    #     self.cursor = self.con.cursor();
 
-    except mysql.connector.Error as e:        # catch SQL errors
-        print("SQL Error: {0}".format(e.msg))
-    except:                                   # anything else
-        print("Unexpected error: {0}".format(sys.exc_info()[0]))
+    #     print("Connected!")
 
-    raw = raw_input('--> ')
+    def get_con(self):
+        return self.con
 
-    while raw != "quit":
-        print(raw)
-        input_list = raw.split()
-        print(input_list)
+    def get_cursor(self):
+        return self.cursor
 
-        if input_list[0] == "login":
-            print("login code here")
+    def is_logged_in(self):
+        return self.logged_in
 
-        elif input_list[0] == "author":
-            print("login code here")
+    def get_user_id(self):
+        return self.user_id
 
-        elif input_list[0] == "author":
-            print("login code here")
+    def get_user_type(self):
+        return self.user_type
 
-        raw = raw_input('--> ')
+    def change_user_id(self, user_id):
+        self.user_id = int(user_id)
 
-    # cleanup
-    con.close()
-    cursor.close()
+    def change_user_type(self, user_type):
+        self.user_type = user_type
 
-    print("\nConnection terminated.", end='')
+    def log_on(self):
+        self.logged_in = True
 
-if __name__ == "__main__":
-    main()
+    def log_off(self):
+        self.logged_in = False
+
+    def cleanup(self):
+        self.con.close()
+        self.cursor.close()

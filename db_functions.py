@@ -7,25 +7,27 @@
 
 
 import datetime         # get current date
+import random
 
 
 def submit_query(db, query):
+
     cursor = db.get_cursor()
 
     # query db
     cursor.execute(query)
 
-    print("Query executed: '{0}'\n\nResults:".format(query))
-
-    # display table header
-    print(''.join(['{:<20}'.format(col) for col in cursor.column_names]))
-    print('-' * 120)
-
-    # display results
-    for row in cursor:
-        print(''.join(['{:<20}'.format(str(col)) for col in row]))
-
-    print('\n')
+    # print("Query executed: '{0}'\n\nResults:".format(query))
+    #
+    # # display table header
+    # print(''.join(['{:<20}'.format(col) for col in cursor.column_names]))
+    # print('-' * 120)
+    #
+    # # display results
+    # for row in cursor:
+    #     print(''.join(['{:<20}'.format(str(col)) for col in row]))
+    #
+    # print('\n')
 
 
 def get_cursor_results(db, query):
@@ -77,9 +79,9 @@ def parse_input(db, string):
     # logged in, so process according to current user
     elif db.is_logged_in():
         if db.get_user_type() == 'author':
-            process_author()
+            process_author(db, tokens)
         elif db.get_user_type() == 'editor':
-            process_editor()
+            process_editor(db, tokens)
         elif db.get_user_type() == 'reviewer':
             process_reviewer()
     # if not logged in, must either login or register
@@ -99,9 +101,9 @@ def login(db, user_id):
         return
 
 
-    # exeute login
+    # execute login
     db.change_user_id(int(user_id))
-    db.change_user_type('author') # or 'editor' or 'reviewer'
+    db.change_user_type('editor') # or 'editor' or 'reviewer'
     db.log_on()
 
     # display greeting
@@ -121,7 +123,14 @@ def login(db, user_id):
 
     elif db.get_user_type() == 'editor':
         # TODO: get user data
-        print("fname, lname")
+
+        # this coudl probably be made into a function, but I can do that later
+        query = "SELECT DISTINCT fname, lname FROM editorNames WHERE personID = " +  str(user_id) + ';'
+        results = get_cursor_results(db, query)
+
+        for (fname, lname) in results:
+            print("\nHello {} {}".format(fname, lname))
+
         status_editor(db, user_id)
     elif db.get_user_type() == 'reviewer':
         # TODO: get user data
@@ -141,16 +150,16 @@ def register(db, tokens):
 def register_person(db, fname, lname):
 
     cursor = db.get_cursor()
+    con = db.get_con()
 
-    add_person = ("INSERT INTO person "
-                  "(fname,lname) "
-                  "VALUES (%s, %s)")
+    add_person = ("INSERT INTO person (fname,lname) VALUES (%s, %s);")
 
     data_add = (fname, lname)
 
     cursor.execute(add_person, data_add)
     personID = cursor.lastrowid
-    print("personID is " + str(personID))
+    print("{} {} is registed with ID {} ".format(fname, lname, str(personID)))
+    con.commit()
 
     return personID
 
@@ -169,14 +178,26 @@ def register_author(db, fname, lname, email, address):
     }
 
     cursor = db.get_cursor()
+    con = db.get_con()
     cursor.execute(add_author, data_author)
+    con.commit()
 
 
 def register_editor(db, fname, lname):
     personID = register_person(db, fname, lname)
 
-    query = 'INSERT INTO editor (personID) VALUES (' + personID + ');'
-    submit_query(db, query)
+    add_editor = ("INSERT INTO editor "
+                  "(personID) "
+                  "VALUES (%(personID)s)")
+
+    data_editor = {
+        'personID': personID
+    }
+
+    cursor = db.get_cursor()
+    con = db.get_con()
+    cursor.execute(add_editor, data_editor)
+    con.commit()
 
 
 def register_reviewer(db, fname, lname, ricode1, ricode2, ricode3):
@@ -189,41 +210,126 @@ def register_reviewer(db, fname, lname, ricode1, ricode2, ricode3):
     # ',' + ricode1 + ',' + ricode2 + ',' + ricode3 + ');'
     submit_query(db, query)
 
+def insert_secondaryAuthors(manuscript_id, name, order):
+    names = name.split()
+
+    add_SA = ("INSERT INTO secondaryAuthor "
+              "(manuscriptID, authorOrder, fname, lname) "
+              "VALUES (%s, %s, %s, %s)")
+
+    data_SA = (manuscript_id, order, names[0], names[1])
+
+    return add_SA, data_SA
 
 def process_author(db, tokens):
     command = tokens[0]
 
+    con = db.get_con()
+    cursor = db.get_cursor()
+
     if command == 'status':
-        status_author()
+        print ("Manuscript Statuses for User ID {}: \n".format(db.user_id))
+        status_author(db, db.user_id)
 
     # submit manuscript to system
     elif command == 'submit':
-        title       = tokens[1]
+
+        now = datetime.datetime.now()
+
+        title = tokens[1]
         affiliation = tokens[2]
-        RICode      = tokens[3]
-        author2     = tokens[4]
-        author3     = tokens[5]
-        author4     = tokens[6]
-        filename    = tokens[7]
+        RICode = tokens[3]
+        # author2 = None
+        # author3 = None
+        # author4 = None
+
+        query = ("SELECT personID FROM editor;")
+        cursor.execute(query)
+
+        editors_array = []
+
+        for row in cursor:
+            for col in row:
+                if(col > 0):
+                    editors_array.append(col)
+
+        editor_id = random.choice(editors_array)
+
+
+        add_manuscript = ("INSERT INTO manuscript "
+                          "(author_personID,editor_personID,title,status,ricodeID,numPages,startingPage,issueOrder,dateReceived,dateSentForReview,dateAccepted,issue_publicationYear,issue_periodNumber) "
+                          "VALUES (%(author_personID)s, %(editor_personID)s, %(title)s, %(status)s, %(ricodeID)s, NULL, NULL, NULL, NOW(), NULL, NULL, NULL, NULL)")
+
+        data_author = {
+            'author_personID': db.user_id,
+            'editor_personID': editor_id,
+            'title': title,
+            'status': 'received',
+            'ricodeID': RICode,
+        }
+
+        cursor.execute(add_manuscript, data_author)
+        manuscript_id = cursor.lastrowid
+
+        update_affiliation = ("UPDATE author SET affiliation = %s WHERE personID = %s;")
+        cursor.execute(update_affiliation, (affiliation, db.user_id))
+
+        print ("Submitted and Updated:\n"
+               "Manuscript ID is " + str(manuscript_id) + "\n"
+               "Manuscript SUBMITTED on " + now.strftime("%Y-%m-%d") + " \n")
+
+        if (len(tokens) >= 5):
+
+            # NEED TO VALIDATE ONLY TWO NAMES PER SECONDARY AUTHOR
+
+            add_SA, data_SA = insert_secondaryAuthors(manuscript_id, tokens[4], 1)
+            cursor.execute(add_SA, data_SA)
+
+        if (len(tokens) >= 6):
+            add_SA, data_SA = insert_secondaryAuthors(manuscript_id, tokens[5], 2)
+            cursor.execute(add_SA, data_SA)
+
+        if (len(tokens) == 7):
+            add_SA, data_SA = insert_secondaryAuthors(manuscript_id, tokens[6], 3)
+            cursor.execute(add_SA, data_SA)
+
+        con.commit()
+
 
         # TODO: select editor to input? anything else needed when submitting manuscript to system?
-        query = "INSERT INTO manuscript (manuscriptID,author_personID,editor_personID," + \
-                "title,`status`,ricodeID,numPages,startingPage,issueOrder,dateReceived," + \
-                "dateSentForReview,dateAccepted,issue_publicationYear,issue_periodNumber) " + \
-                "VALUES (NULL," + db.user_id + ',' + "300" + ',' + title + ",received," + RICode + ',' + \
-                "NULL,NULL,NULL," + datetime.date.today() + ",NULL,NULL,NULL,NULL);"
-        submit_query(db, query)
+
+
+
+        # query = "INSERT INTO manuscript (manuscriptID,author_personID,editor_personID," + \
+        #         "title,`status`,ricodeID,numPages,startingPage,issueOrder,dateReceived," + \
+        #         "dateSentForReview,dateAccepted,issue_publicationYear,issue_periodNumber) " + \
+        #         "VALUES (NULL," + db.user_id + ',' + "300" + ',' + title + ",received," + RICode + ',' + \
+        #         "NULL,NULL,NULL," + datetime.date.today() + ",NULL,NULL,NULL,NULL);"
+        # submit_query(db, query)
 
     # immediately remove manuscript, regardless of status
     elif command == 'retract':
         manuscript_num = tokens[1]
+        query = "SELECT manuscriptID, author_personID FROM manuscript WHERE author_personID = " +  str(db.user_id) + " AND manuscriptID = " + str(manuscript_num) + ';'
+        cursor.execute(query)
 
-        s = raw_input('Are you sure? (y/n): ')
-        if s.lower() == 'y':
-            query = "DELETE FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
-            submit_query(db, query)
+        if(cursor.fetchone()):
+            s = raw_input('Are you sure? (y/n): ')
+            if s.lower() == 'y':
+                query = "DELETE FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+                submit_query(db, query)
+
+                query = "DELETE FROM feedback WHERE manuscriptID = " + str(manuscript_num) + ';'
+                submit_query(db, query)
+
+                print "Manuscript {} has been deleted".format(manuscript_num)
+
+                con.commit()
+
+            else:
+                print("No action taken.")
         else:
-            print("No action taken.")
+            print "Sorry, you are not the author of this manuscript."
 
     else:
         print("Invalid input. Command '" + command + "' not recognized.")
@@ -233,12 +339,36 @@ def process_author(db, tokens):
 def process_editor(db, tokens):
     command = tokens[0]
 
+    con = db.get_con()
+    cursor = db.get_cursor()
+
     if command == 'status':
-        status_editor()
-    elif command == 'assign':
-        manuscript_num  = tokens[1]
-        reviewer_id     = tokens[2]
-        # TODO: assign manuscript to a reviewer
+        status_editor(db, db.user_id)
+    elif command == 'assign' and len(tokens) == 3:
+        manuscript_num = tokens[1]
+        reviewer_id = tokens[2]
+
+        # should check to make sure that RICode matches
+
+        # query = "UPDATE manuscript SET status = `underReview` WHERE manuscriptID = " + str(manuscript_num) + ';'
+        # cursor.execute(query)
+
+        getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+        results = get_cursor_results(db, getDate)
+
+        date = None
+        for(dateReceived) in results:
+            date = dateReceived
+            print date
+
+
+
+        # date received?
+        insert_feedback = ""
+
+
+        # cursor.commit()
+
     elif command == 'reject':
         manuscript_num  = tokens[1]
         # TODO: set manuscript status to rejected and add timestamp
@@ -265,7 +395,7 @@ def process_reviewer(db, tokens):
     command = tokens[0]
 
     if command == 'status':
-        status_reviewer()
+        status_reviewer(db, db.user_id)
     elif command == 'resign':
         # prompt to enter unique ID
         print("Thank you for our service!")
@@ -322,19 +452,30 @@ def status_author(db, author_id):
     print("{} manuscripts scheduled".format(status_query_return(db, query)))
 
     query = "SELECT count FROM authorNumPublished WHERE personID = " +  str(author_id) + ';'
-    print("{} manuscripts published".format(status_query_return(db, query)))
+    print("{} manuscripts published\n".format(status_query_return(db, query)))
 
 
 def status_editor(db, editor_id):
-    x = 5
 
-    print("{} submitted".format(x))
-    print("{} under review".format(x))
-    print("{} rejected".format(x))
-    print("{} accepted".format(x))
-    print("{} in typesetting".format(x))
-    print("{} scheduled for publication".format(x))
-    print("{} published".format(x))
+    print "Here are your current manuscripts: "
+
+    cursor = db.get_cursor()
+    query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
+    cursor.execute(query)
+
+    if(cursor.fetchone()):
+        for (status, manuscriptID, title) in cursor:
+            print("ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
+    else:
+        print "You have no manuscripts at this time"
+
+    # print("{} submitted".format(x))
+    # print("{} under review".format(x))
+    # print("{} rejected".format(x))
+    # print("{} accepted".format(x))
+    # print("{} in typesetting".format(x))
+    # print("{} scheduled for publication".format(x))
+    # print("{} published".format(x))
 
 
 def status_reviewer(db, reviewer_id):
