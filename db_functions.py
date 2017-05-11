@@ -73,7 +73,7 @@ def parse_input(db, string):
         login(db, user_id)
     # register new user
     elif tokens[0] == 'register' and len(tokens) > 1:
-        register(tokens)
+        register(db, tokens)
     # logged in, so process according to current user
     elif db.is_logged_in():
         if db.get_user_type() == 'author':
@@ -131,7 +131,7 @@ def login(db, user_id):
 
 def register(db, tokens):
     if tokens[1] == 'author':
-        register_author(db, tokens[2], tokens[3])
+        register_author(db, tokens[2], tokens[3], tokens[4], tokens[5])
     elif tokens[1] == 'editor':
         register_editor(db, tokens[2], tokens[3])
     elif tokens[1] == 'reviewer':
@@ -139,22 +139,37 @@ def register(db, tokens):
 
 
 def register_person(db, fname, lname):
-    query = 'INSERT INTO person (personID,fname,lname) VALUES (NULL,"' + \
-            fname + '","' + lname + '");'
-    submit_query(db, query)
 
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO: how to get person ID back?
+    cursor = db.get_cursor()
 
-    return ID
+    add_person = ("INSERT INTO person "
+                  "(fname,lname) "
+                  "VALUES (%s, %s)")
+
+    data_add = (fname, lname)
+
+    cursor.execute(add_person, data_add)
+    personID = cursor.lastrowid
+    print("personID is " + str(personID))
+
+    return personID
 
 
 def register_author(db, fname, lname, email, address):
     personID = register_person(db, fname, lname)
 
-    query = 'INSERT INTO author (personID, fname, lname, email, address) VALUES (' + \
-            personID + ',"' + fname + '","' + lname + '","' + email + '","' + address + '");'
-    submit_query(db, query)
+    add_author = ("INSERT INTO author "
+                  "(personID,email,address,affiliation) "
+                  "VALUES (%(personID)s, %(email)s, %(address)s, NULL)")
+
+    data_author = {
+        'personID': personID,
+        'email': email,
+        'address': address,
+    }
+
+    cursor = db.get_cursor()
+    cursor.execute(add_author, data_author)
 
 
 def register_editor(db, fname, lname):
@@ -308,13 +323,6 @@ def status_author(db, author_id):
 
     query = "SELECT count FROM authorNumPublished WHERE personID = " +  str(author_id) + ';'
     print("{} manuscripts published".format(status_query_return(db, query)))
-    # print("{} submitted".format(x))
-    # print("{} under review".format(x))
-    # print("{} rejected".format(x))
-    # print("{} accepted".format(x))
-    # print("{} in typesetting".format(x))
-    # print("{} scheduled for publication".format(x))
-    # print("{} published".format(x))
 
 
 def status_editor(db, editor_id):
