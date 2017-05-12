@@ -7,7 +7,7 @@
 import mysql.connector                      # mysql functionality
 
 class Database:
-    def __init__(self, server, username, password, database):
+    def __init__(self, server, username, password, database, confidential = True):
         # initialize db connection
         self.con = mysql.connector.connect(host=server,
                                            user=username,
@@ -22,6 +22,8 @@ class Database:
         self.logged_in = False          # boolean: whether anyone is logged in
         self.user_id   = -1             # int: current user id
         self.user_type = None           # string: author, editor, or reviewer
+
+        self.confidential = confidential
 
     # def connect(self, server, username, password, database):
     #     self.con = mysql.connector.connect(host=server,
@@ -41,6 +43,9 @@ class Database:
 
     def is_logged_in(self):
         return self.logged_in
+
+    def is_confidential(self):
+        return self.confidential
 
     def get_user_id(self):
         return self.user_id

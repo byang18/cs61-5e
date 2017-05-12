@@ -8,6 +8,7 @@ from __future__ import print_function       # make print a function
 import traceback                            # for error handling
 import sys                                  # for misc errors
 import mysql.connector                      # mysql functionality
+import binascii
 
 from database import Database
 from db_functions import *
@@ -23,6 +24,32 @@ if __name__ == "__main__":
 
     try:
         print("Connection established.\n")
+
+        if db.is_confidential():
+            print("Please enter the master key used for encryption:")
+            key   = raw_input('--> ')
+            # key = binascii.a2b_hqx(key)
+            # key = binascii.hexlify(key)
+            # db.set_key(key)
+
+            # query = 'SELECT CONVERT(object USING utf8) FROM UNHEX("' + key + '");'
+            query = 'SET @key_str = HEX("' + key + '");'
+
+            get_cursor_results(db,query)
+
+            # con    = db.get_con()
+            # cursor = db.get_cursor()
+
+            # cursor.execute(query)
+            # con.commit()
+
+            # query = 'INSERT INTO credential (personID, pword) VALUES (' + str(1000) + ', AES_ENCRYPT("hey","' + db.get_key() + '"));'
+
+            # cursor.execute(query)
+            # con.commit()
+
+            # query = "SELECT * FROM user_variables_by_thread;"
+            # print(submit_query_return(db, query))
 
         # query = "SELECT * FROM feedback;"
 

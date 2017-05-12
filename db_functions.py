@@ -8,6 +8,7 @@
 
 import datetime         # get current date
 import random
+import getpass          # raw_input substitute for passwords
 
 
 # def submit_query(db, query):
@@ -113,6 +114,10 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != "":
+        if not login_authenticate(db, user_id):
+            print("Incorrect password.")
+            return
+
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
@@ -137,6 +142,10 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != "":
+        if not login_authenticate(db, user_id):
+            print("Incorrect password.")
+            return
+
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
@@ -159,7 +168,11 @@ def login(db, user_id):
 
     results = submit_query_return(db, query)
 
-    if results != "":
+    if results != '':
+        if not login_authenticate(db, user_id):
+            print("Incorrect password.")
+            return
+
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
@@ -182,25 +195,86 @@ def login(db, user_id):
 
 
 
-def register(db, tokens):
-    if tokens[1] == 'author':
-        register_author(db, tokens[2], tokens[3], tokens[4], tokens[5])
-    elif tokens[1] == 'editor':
-        register_editor(db, tokens[2], tokens[3])
-    elif tokens[1] == 'reviewer':
+# returns True if authentication was successful
+# returns False otherwise
+# if no password is setup, returns True
+def login_authenticate(db, user_id):
+    # check if user has an associated password
+    query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + ';'
 
-        if(len(tokens) == 7):
-            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
-        elif(len(tokens) == 8):
-            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7])
-        elif(len(tokens) == 9):
-            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
+    result = get_single_query(db,query)
+
+    print("result is " + result)
+
+    # no associated password
+    if not result:
+        print("no associated password")
+        return True
+
+    # request login from user
+    print('Please enter your password:')
+    pw = getpass.getpass('-->')
+    
+    # confirm validity of password
+    # query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
+    #         ' AND AES_DECRYPT(pword,"' + db.get_key() + '") = "' + pw + '";'
+    query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
+            ' AND AES_DECRYPT(pword, @key_str) = "' + pw + '";'
+    result = get_single_query(db,query)
+
+    return result != None;
+
+
+
+def register(db, tokens):
+    cursor = db.get_cursor()
+    con    = db.get_con()
+
+    user_type = tokens[1]
+
+    if user_type == 'author':
+        personID = register_author(db, tokens[2], tokens[3], tokens[4], tokens[5])
+
+    elif user_type == 'editor':
+        personID = register_editor(db, tokens[2], tokens[3])
+
+    elif user_type == 'reviewer':
+        if len(tokens) == 7:
+            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
+        elif len(tokens) == 8:
+            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7])
+        elif len(tokens) == 9:
+            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
         else:
             print("ERROR: Invalid input. Too many arguments.")
+            return
+
+    else:
+        print("ERROR: User type " + user_type + " is invalid.")
+        return
+
+    # if the confidential setting is on, prompt for a password
+    if db.is_confidential():
+        print('Please enter a password.')
+        pw = getpass.getpass('-->')
+
+        # query    = 'INSERT INTO credential (personID, pword) VALUES (%s, AES_ENCRYPT(%s,@key_str));'
+        # data_add = (personID, user_type)
+        
+        #query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + ', AES_ENCRYPT("' + pw + '","' + db.get_key() + '"));'
+        query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + ', AES_ENCRYPT("' + pw + '",@key_str));'
+        
+        print pw
+        print query
+
+        # cursor.execute(query, data_add)
+        cursor.execute(query)
+        con.commit()
+
+
 
 
 def register_person(db, fname, lname):
-
     cursor = db.get_cursor()
     con = db.get_con()
 
@@ -234,6 +308,8 @@ def register_author(db, fname, lname, email, address):
     cursor.execute(add_author, data_author)
     con.commit()
 
+    return personID
+
 
 def register_editor(db, fname, lname):
     personID = register_person(db, fname, lname)
@@ -250,6 +326,8 @@ def register_editor(db, fname, lname):
     con = db.get_con()
     cursor.execute(add_editor, data_editor)
     con.commit()
+
+    return personID
 
 
 def register_reviewer(db, fname, lname, email, affiliation, *ricodes):
@@ -306,6 +384,8 @@ def register_reviewer(db, fname, lname, email, affiliation, *ricodes):
     # # TODO: submit reviewer_has_RICodes???
     # # ',' + ricode1 + ',' + ricode2 + ',' + ricode3 + ');'
     # submit_query(db, query)
+
+    return personID
 
 
 def insert_secondaryAuthors(manuscript_id, name, order):
