@@ -196,6 +196,15 @@ ENGINE = InnoDB;
 
 
 
+-- credential table, for passwords
+DROP TABLE IF EXISTS `credential`;      -- PART E EXTRA CREDIT
+CREATE TABLE IF NOT EXISTS `lilyx_db`.`credential` (
+  `personID` INT NOT NULL AUTO_INCREMENT,
+  `pword` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`personID`))
+ENGINE = InnoDB;
+
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
@@ -609,7 +618,7 @@ WHERE `status` = "published"
 GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
--- individual athor
+-- individual author
 DROP VIEW IF EXISTS individualManuscripts;
 CREATE VIEW individualManuscripts AS
 SELECT personID, fname, lname, manuscriptID
@@ -625,5 +634,10 @@ DROP VIEW IF EXISTS reviewerNames;
 CREATE VIEW reviewerNames AS
 SELECT *
 FROM reviewer NATURAL JOIN person;
+
+DROP VIEW IF EXISTS manuscriptWReviewers;
+CREATE VIEW manuscriptWReviewers AS
+SELECT manuscript.manuscriptID, reviewer_personID, author_personID, editor_personID, title, `status`, RICodeID 
+FROM manuscript JOIN feedback ON (manuscript.manuscriptID = feedback.manuscriptID);
 
 

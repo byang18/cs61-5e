@@ -21,7 +21,7 @@ class Database:
 
         self.logged_in = False          # boolean: whether anyone is logged in
         self.user_id   = -1             # int: current user id
-        self.user_type = None           # string: author, editor, or reviewer
+        self.user_type = ""             # string: author, editor, or reviewer
 
         self.confidential = confidential
 
