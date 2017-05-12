@@ -97,34 +97,22 @@ def parse_input(db, string):
             process_reviewer(db, tokens)
     # if not logged in, must either login or register
     else:
-        print("Invalid input. Please login or register.")
+        print("ERROR: Invalid input. Please login or register.")
 
 
+# check if user_id is valid
+# if so, determine user type and act accordingly
+# if not, print an error message
 def login(db, user_id):
     user_id = int(user_id)
 
-    # check if user_id is valid
-    query = "SELECT personID FROM person WHERE personID = " + str(user_id) + ';'
+    # is the user an author?
+    query = "SELECT fname, lname, address FROM author JOIN person ON author.personID " + \
+            "= person.personID WHERE author.personID = " + str(user_id) + ';'
+
     results = submit_query_return(db, query)
 
-    if results == "":
-        print('ERROR: No user exists corresponding to ID ' + str(user_id) + '.')
-        return
-
-
-    # execute login
-    db.change_user_id(int(user_id))
-
-    # TODO: determine which user type it is
-    db.change_user_type('author') # or 'editor' or 'reviewer'
-    db.log_on()
-
-    # display greeting
-    if db.get_user_type() == 'author':
-        # TODO: get user author data
-        query = "SELECT fname, lname, address FROM author JOIN person ON author.personID " + \
-                "= person.personID WHERE author.personID = " + str(user_id) + ';'
-
+    if results != "":
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
@@ -135,12 +123,21 @@ def login(db, user_id):
 
         status_author(db, user_id)
 
-    elif db.get_user_type() == 'editor':
-        query = "SELECT fname, lname FROM editor JOIN person ON editor.personID " + \
-                "= person.personID WHERE editor.personID = " + str(user_id) + ';'
+        # execute login
+        db.change_user_id(int(user_id))
+        db.change_user_type('author')
+        db.log_on()
 
+        return
+        
+    # is the user an editor?
+    query = "SELECT fname, lname FROM editor JOIN person ON editor.personID " + \
+            "= person.personID WHERE editor.personID = " + str(user_id) + ';'
+
+    results = submit_query_return(db, query)
+
+    if results != "":
         results = submit_query_return(db, query)
-
         results = results.strip().split('|')
 
         print("Welcome back, editor " + str(user_id) + "! Here's what we have stored about you:")
@@ -149,10 +146,20 @@ def login(db, user_id):
 
         status_editor(db, user_id)
 
-    elif db.get_user_type() == 'reviewer':
-        query = "SELECT fname, lname FROM reviewer JOIN person ON reviewer.personID " + \
-                "= person.personID WHERE reviewer.personID = "+ str(user_id) + ';'
+        # execute login
+        db.change_user_id(int(user_id))
+        db.change_user_type('editor')
+        db.log_on()
 
+        return
+
+    # is the user a reviewer?
+    query = "SELECT fname, lname FROM reviewer JOIN person ON reviewer.personID " + \
+            "= person.personID WHERE reviewer.personID = "+ str(user_id) + ';'
+
+    results = submit_query_return(db, query)
+
+    if results != "":
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
@@ -162,6 +169,17 @@ def login(db, user_id):
 
         # TODO: everything should be limited to manuscripts assigned to that reviewer
         status_reviewer(db, user_id) 
+
+        # execute login
+        db.change_user_id(int(user_id))
+        db.change_user_type('editor')
+        db.log_on()
+
+        return
+
+    # no user corresponds to given id
+    print('ERROR: No user exists corresponding to ID ' + str(user_id) + '.')
+
 
 
 def register(db, tokens):
@@ -178,7 +196,7 @@ def register(db, tokens):
         elif(len(tokens) == 9):
             register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
         else:
-            print("Invalid input. Too many arguments.")
+            print("ERROR: Invalid input. Too many arguments.")
 
 
 def register_person(db, fname, lname):

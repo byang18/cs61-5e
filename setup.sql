@@ -16,9 +16,6 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
 
--- -----------------------------------------------------
--- Schema byang_db
--- -----------------------------------------------------
 USE `byang_db` ;
 
 
@@ -26,7 +23,7 @@ USE `byang_db` ;
 DROP TABLE IF EXISTS `feedback`;
 DROP TABLE IF EXISTS `reviewer_has_RICode`;
 DROP TABLE IF EXISTS `secondaryAuthor`;
-DROP TABLE IF EXISTS `reviewer`;-- 
+DROP TABLE IF EXISTS `reviewer`;
 DROP TABLE IF EXISTS `manuscript`;
 DROP TABLE IF EXISTS `author`;
 DROP TABLE IF EXISTS `editor`;
@@ -196,6 +193,8 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`secondaryAuthor` (
     ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
+
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
