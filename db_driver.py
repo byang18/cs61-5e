@@ -5,10 +5,9 @@
 
 
 from __future__ import print_function       # make print a function
-import mysql.connector                      # mysql functionality
-import sys                                  # for misc errors
-
 import traceback                            # for error handling
+import sys                                  # for misc errors
+import mysql.connector                      # mysql functionality
 
 from database import Database
 from db_functions import *
@@ -25,9 +24,9 @@ if __name__ == "__main__":
     try:
         print("Connection established.\n")
 
-        query = "SELECT * FROM feedback;"
+        # query = "SELECT * FROM feedback;"
 
-        submit_query(db, query)
+        # submit_query(db, query)
 
         # print(submit_query_return(db, query))
         # submit_query_return(db, query)
@@ -40,7 +39,6 @@ if __name__ == "__main__":
         while (s != 'quit' and s != 'q'):
             parse_input(db, s)
             s = raw_input('--> ')
-
 
     except mysql.connector.Error as e:        # catch SQL errors
         print("SQL Error: {0}".format(e.msg))

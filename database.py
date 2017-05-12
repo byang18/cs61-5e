@@ -5,7 +5,6 @@
 
 
 import mysql.connector                      # mysql functionality
-import sys                                  # for misc errors
 
 class Database:
     def __init__(self, server, username, password, database):
