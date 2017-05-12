@@ -17,8 +17,6 @@ class Database:
         # initialize a cursor
         self.cursor = self.con.cursor();
 
-        print("Connected!")
-
         self.logged_in = False          # boolean: whether anyone is logged in
         self.user_id   = -1             # int: current user id
         self.user_type = ""             # string: author, editor, or reviewer
@@ -54,6 +52,8 @@ class Database:
 
     def log_off(self):
         self.logged_in = False
+        self.user_id = -1
+        self.user_type = ""
 
     def cleanup(self):
         self.con.close()
