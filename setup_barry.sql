@@ -16,14 +16,17 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
 
-USE `byang_db`;
+-- -----------------------------------------------------
+-- Schema byang_db
+-- -----------------------------------------------------
+USE `byang_db` ;
 
 
 -- DROP statements
 DROP TABLE IF EXISTS `feedback`;
 DROP TABLE IF EXISTS `reviewer_has_RICode`;
 DROP TABLE IF EXISTS `secondaryAuthor`;
-DROP TABLE IF EXISTS `reviewer`;
+DROP TABLE IF EXISTS `reviewer`;-- 
 DROP TABLE IF EXISTS `manuscript`;
 DROP TABLE IF EXISTS `author`;
 DROP TABLE IF EXISTS `editor`;
@@ -193,17 +196,6 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`secondaryAuthor` (
     ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
-
-
-
--- credential table, for passwords
-DROP TABLE IF EXISTS `credential`;      -- PART E EXTRA CREDIT
-CREATE TABLE IF NOT EXISTS `lilyx_db`.`credential` (
-  `personID` INT NOT NULL AUTO_INCREMENT,
-  `pword` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`personID`))
-ENGINE = InnoDB;
-
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -598,7 +590,6 @@ WHERE `status` = "accepted"
 GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
--- number of manuscripts in typeset
 DROP VIEW IF EXISTS authorNumTypeset;
 CREATE VIEW authorNumTypeset AS
 select personID, fname, lname, count(manuscriptID) AS count
@@ -625,29 +616,32 @@ WHERE `status` = "published"
 GROUP BY personID
 ORDER BY count(manuscriptID) desc;
 
--- individual author
+-- individual athor
 DROP VIEW IF EXISTS individualManuscripts;
 CREATE VIEW individualManuscripts AS
 SELECT personID, fname, lname, manuscriptID
 FROM LeadAuthorManuscripts
 WHERE personID = 128; # CHANGE NUMBER 
 
-DROP VIEW IF EXISTS editorNames;
-CREATE VIEW editorNames AS
-SELECT *
-FROM editor NATURAL JOIN person;
-
-DROP VIEW IF EXISTS reviewerNames;
-CREATE VIEW reviewerNames AS
-SELECT *
-FROM reviewer NATURAL JOIN person;
-
 DROP VIEW IF EXISTS manuscriptWReviewers;
+
 CREATE VIEW manuscriptWReviewers AS
 SELECT manuscript.manuscriptID, reviewer_personID, author_personID, editor_personID, title, `status`, RICodeID 
 FROM manuscript JOIN feedback ON (manuscript.manuscriptID = feedback.manuscriptID);
 
+DROP TABLE IF EXISTS `credential`;
+CREATE TABLE IF NOT EXISTS `byang_db`.`credential` (
+`personID` INT NOT NULL AUTO_INCREMENT,
+`pword` VARCHAR(30) NOT NULL,
+PRIMARY KEY (`personID`))
+ENGINE = InnoDB;
 
+-- Barry Yang and Lily Xu
+-- CS 61 Databases
+-- Lab 2 part d
+-- May 5, 2017
+
+-- this SQL script defines two specified triggers
 
 
 -- -----------------------------------------------------
@@ -744,5 +738,3 @@ END
 
 -- restore delimiter
 DELIMITER ;
-
-

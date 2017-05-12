@@ -8,7 +8,7 @@
 
 import datetime         # get current date
 import random
-import getpass          # raw_input substitute for passwords
+
 
 
 def get_cursor_results(db, query):
@@ -25,7 +25,6 @@ def get_single_query(db, query):
     for row in cursor:
         for col in row:
             to_return = col
-            print(to_return)
 
     return to_return
 
@@ -47,10 +46,9 @@ def submit_query_return(db, query):
 
     return output
 
-
 def insert_query(db, query, data):
-    con    = db.get_con()
-    cursor = db.get_cursor()
+    con     = db.get_con()
+    cursor  = db.get_cursor()
     cursor.execute(query, data)
     con.commit()
 
@@ -64,6 +62,7 @@ def change_query(db, query):
     con.commit()
 
 
+
 # parse input from user
 # process command if 'login' or 'register'
 # call appropriate function to process command for author, editor, or reviewer
@@ -71,7 +70,7 @@ def parse_input(db, string):
     tokens = string.strip().split('|')
 
     if len(tokens) == 0:
-        print("ERROR: Invalid input. Query cannot be blank.")
+        print("Invalid input. Query cannot be blank")
         return
 
     # log in user
@@ -91,7 +90,7 @@ def parse_input(db, string):
             process_reviewer(db, tokens)
     # if not logged in, must either login or register
     else:
-        print("ERROR: Invalid input. Please login or register.")
+        print("Invalid input. Please login or register.")
 
 
 # check if user_id is valid
@@ -107,14 +106,10 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != "":
-        if not login_authenticate(db, user_id):
-            print("Incorrect password.")
-            return
-
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
-        print("\nWelcome back, author " + str(user_id) + "! Here's what we have stored about you:")
+        print("Welcome back, author " + str(user_id) + "! Here's what we have stored about you:")
         print("  First name: " + results[0])
         print("  Last name:  " + results[1])
         print("  Address:    " + results[2])
@@ -127,22 +122,18 @@ def login(db, user_id):
         status_author(db, user_id)
 
         return
-        
+
     # is the user an editor?
     query = "SELECT fname, lname FROM editor JOIN person ON editor.personID " + \
             "= person.personID WHERE editor.personID = " + str(user_id) + ';'
 
     results = submit_query_return(db, query)
 
-    if results != '':
-        if not login_authenticate(db, user_id):
-            print("Incorrect password.")
-            return
-
+    if results != "":
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
-        print("\nWelcome back, editor " + str(user_id) + "! Here's what we have stored about you:")
+        print("Welcome back, editor " + str(user_id) + "! Here's what we have stored about you:")
         print("  First name: " + results[0])
         print("  Last name:  " + results[1])
 
@@ -161,15 +152,11 @@ def login(db, user_id):
 
     results = submit_query_return(db, query)
 
-    if results != '':
-        if not login_authenticate(db, user_id):
-            print("Incorrect password.")
-            return
-
+    if results != "":
         results = submit_query_return(db, query)
         results = results.strip().split('|')
 
-        print("\nWelcome back, reviewer " + str(user_id) + "! Here's what we have stored about you:")
+        print("Welcome back, reviewer " + str(user_id) + "! Here's what we have stored about you:")
         print("  First name: " + results[0])
         print("  Last name:  " + results[1])
 
@@ -179,7 +166,7 @@ def login(db, user_id):
         db.log_on()
 
         # TODO: everything should be limited to manuscripts assigned to that reviewer
-        status_reviewer(db, user_id) 
+        status_reviewer(db, user_id)
 
         return
 
@@ -187,83 +174,31 @@ def login(db, user_id):
     print('ERROR: No user exists corresponding to ID ' + str(user_id) + '.')
 
 
-
-# returns True if authentication was successful
-# returns False otherwise
-# if no password is setup, returns True
-def login_authenticate(db, user_id):
-    # check if user has an associated password
-    query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + ';'
-
-    result = get_single_query(db,query)
-
-    # no associated password
-    if not result:
-        return True
-
-    # request login from user
-    print('Please enter your password:')
-    pw = getpass.getpass('-->')
-    
-    # confirm validity of password
-    # query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
-    #         ' AND AES_DECRYPT(pword,"' + db.get_key() + '") = "' + pw + '";'
-    query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
-            ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
-    result = get_single_query(db,query)
-
-    return result != None;
-
-
-
 def register(db, tokens):
-    cursor = db.get_cursor()
-    con    = db.get_con()
+    if tokens[1] == 'author':
+        register_author(db, tokens[2], tokens[3], tokens[4], tokens[5])
+    elif tokens[1] == 'editor':
+        register_editor(db, tokens[2], tokens[3])
+    elif tokens[1] == 'reviewer':
 
-    user_type = tokens[1]
-
-    if user_type == 'author':
-        personID = register_author(db, tokens[2], tokens[3], tokens[4], tokens[5])
-
-    elif user_type == 'editor':
-        personID = register_editor(db, tokens[2], tokens[3])
-
-    elif user_type == 'reviewer':
-        if len(tokens) == 7:
-            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
-        elif len(tokens) == 8:
-            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7])
-        elif len(tokens) == 9:
-            personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
+        if(len(tokens) == 7):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
+        elif(len(tokens) == 8):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7])
+        elif(len(tokens) == 9):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
         else:
-            print("ERROR: Invalid input. Too many arguments.")
-            return
-
-    else:
-        print("ERROR: User type " + user_type + " is invalid.")
-        return
-
-    # if the confidential setting is on, prompt for a password
-    if db.is_confidential():
-        print('Please enter a password.')
-        pw = getpass.getpass('-->')
-
-        query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + \
-                ', AES_ENCRYPT("' + pw + '",@master_key));'
-        
-        print pw
-        print query
-
-        cursor.execute(query)
-        con.commit()
-
-
+            print("Invalid input. Too many arguments.")
 
 
 def register_person(db, fname, lname):
+
     add_person = ('INSERT INTO person (fname,lname) VALUES (%s, %s);')
 
     data_add = (fname, lname)
+
+    # cursor.execute(add_person, data_add)
+    # personID = cursor.lastrowid
 
     personID = insert_query(db, add_person, data_add)
 
@@ -287,8 +222,6 @@ def register_author(db, fname, lname, email, address):
 
     insert_query(db, add_author, data_author)
 
-    return personID
-
 
 def register_editor(db, fname, lname):
     personID = register_person(db, fname, lname)
@@ -301,12 +234,12 @@ def register_editor(db, fname, lname):
         'personID': personID
     }
 
-    insert_query(db, add_editor, data_editor)
 
-    return personID
+    insert_query(db, add_editor, data_editor)
 
 
 def register_reviewer(db, fname, lname, email, affiliation, *ricodes):
+
     personID = register_person(db, fname, lname)
 
     add_reviewer = ("INSERT INTO reviewer "
@@ -330,8 +263,6 @@ def register_reviewer(db, fname, lname, email, affiliation, *ricodes):
             'RICode_RICodeID': ricode,
         }
         insert_query(db, add_reviewerRICode, data_reviewerRICode)
-
-    return personID
 
 
 def insert_secondaryAuthors(manuscript_id, name, order):
@@ -370,7 +301,7 @@ def process_author(db, tokens):
         # assign an editor to manuscript
         query = ("SELECT personID FROM editor;")
         cursor.execute(query)
-
+        # appending thing, return the array
         # compile list of possible editors
         editors_array = []
 
@@ -397,16 +328,19 @@ def process_author(db, tokens):
             'ricodeID': RICode,
         }
 
+        # insert_query(db, add_manuscript, data_author)
+        # manuscript_id = cursor.lastrowid
+
         manuscript_id = insert_query(db, add_manuscript, data_author)
 
         update_affiliation = ("UPDATE author SET affiliation = %s WHERE personID = %s;")
-        
+
         insert_query(db, update_affiliation, (affiliation, db.user_id))
 
         print("Submitted and updated:\n"
               "  Manuscript ID is " + str(manuscript_id) + "\n"
               "  Manuscript SUBMITTED on " + now.strftime("%Y-%m-%d") + " \n")
- 
+
 
         # add secondary authors (if any)
         i = 1
@@ -414,7 +348,7 @@ def process_author(db, tokens):
 
         while i <= num_secondary_authors:
             add_SA, data_SA = insert_secondaryAuthors(manuscript_id, tokens[i+3], i)
-            cursor.execute(add_SA, data_SA)
+            insert_query(db, add_SA, data_SA)
             i += 1
 
 
@@ -423,10 +357,11 @@ def process_author(db, tokens):
         manuscript_num = tokens[1]
 
         # ensure that author can only retract his/her own manuscripts
+        # lily changed this in hers
         query = "SELECT manuscriptID, author_personID FROM manuscript WHERE author_personID = " +  str(db.user_id) + " AND manuscriptID = " + str(manuscript_num) + ';'
-        result = get_single_query(db, query)
+        cursor.execute(query)
 
-        if not result:
+        if not cursor.fetchone():
             print("Sorry, you are not the author of this manuscript.")
             return
 
@@ -462,6 +397,7 @@ def process_editor(db, tokens):
         reviewer_id = tokens[2]
 
         # check to make sure that RICode matches
+        # use lily's structure
         getManuscriptRICode = "SELECT ricodeID FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
         manuscriptRICode    = get_single_query(db, getManuscriptRICode)
 
@@ -472,12 +408,22 @@ def process_editor(db, tokens):
 
         for row in cursor:
             for col in row:
-                if col > 0:
+                if(col > 0):
                     reviewerRICodes.append(col)
+
+        # print("Reviewer RICodes are " + str(reviewerRICodes))
+        # print("Manuscript RICode is " + str(manuscriptRICode))
 
         if manuscriptRICode in reviewerRICodes:
 
             getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+            # results = get_cursor_results(db, getDate)
+            #
+            # date = None
+            # for row in results:
+            #     for (dateReceived) in row:
+            #         date = dateReceived
+            #         print date
 
             date = get_single_query(db, getDate)
 
@@ -495,10 +441,11 @@ def process_editor(db, tokens):
             insert_query(db, add_feedback, data_feedback)
 
             query = "UPDATE manuscript SET `status` = 'underReview', dateSentForReview = NOW() WHERE manuscriptID = " + str(manuscript_num) + ';'
-            cursor.execute(query)
+            change_query(db, query)
             # date received?
             # insert_feedback = ""
             print("Manuscript ID {} assigned to reviewer {}. Manuscript status set to 'underReview'.".format(manuscript_num, reviewer_id))
+
         else:
             print("Invalid entry. This reviewer does not have the appropriate RICode.")
 
@@ -516,17 +463,19 @@ def process_editor(db, tokens):
         print("Manuscript {} accepted on {}").format(manuscript_num, now.strftime("%Y-%m-%d"))
 
     elif command == 'typeset' and len(tokens) == 3:
-        manuscript_num = tokens[1]
-        pp             = tokens[2]
+        manuscript_num  = tokens[1]
+        pp              = tokens[2]
 
         query = "UPDATE manuscript SET `status` = 'typeset', numPages = {} WHERE manuscriptID = {};".format(pp, manuscript_num)
         change_query(db, query)
+
         print("Manuscript {} status set to 'typeset' on {}. {} pages logged").format(manuscript_num, now.strftime("%Y-%m-%d"), pp)
 
+    # use lily's function here
     elif command == 'schedule' and len(tokens) == 4:
-        manuscript_num = tokens[1]
-        issueYear      = tokens[2]
-        issuePeriod    = tokens[3]
+        manuscript_num  = tokens[1]
+        issueYear       = tokens[2]
+        issuePeriod     = tokens[3]
 
         getNumPages = "SELECT numPages FROM manuscript WHERE issue_publicationYear = {} AND issue_periodNumber = {};".format(issueYear, issuePeriod)
         cursor.execute(getNumPages)
@@ -552,8 +501,8 @@ def process_editor(db, tokens):
 
 
     elif command == 'publish' and len(tokens) == 3:
-        issueYear   = tokens[1]
-        issuePeriod = tokens[2]
+        issueYear    = tokens[1]
+        issuePeriod  = tokens[2]
 
         query = "UPDATE manuscript SET status = 'published' WHERE issue_publicationYear = {} AND issue_periodNumber = {};".format(issueYear, issuePeriod)
         change_query(db, query)
@@ -562,15 +511,14 @@ def process_editor(db, tokens):
         change_query(db, query)
 
         print("Issue year {}, period {} printed on {}. Status of all corresponding manuscripts changed to 'published'").format(issueYear, issuePeriod, now.strftime("%Y-%m-%d"))
-    
+
     else:
         print("Invalid input. Command '" + command + "' not recognized, or corresponding arguments are not correct")
 
-
-
+# rearrange the append query
 def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, contribution, recommendation, new_status):
 
-    cursor = db.get_cursor()
+    cursor  = db.get_cursor()
 
     getManuscripts  = "SELECT manuscriptID from manuscriptWReviewers WHERE reviewer_personID = " + str(db.user_id) + ';'
     cursor.execute(getManuscripts)
@@ -579,8 +527,8 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
 
     for row in cursor:
         for col in row:
-            if col > 0:
-                manuscripts.append(int(col))
+            if(col > 0):
+                manuscripts.append(str(col))
 
     # print "manuscript nums are " + str(manuscripts)
     # print "manuscript is " + str(manuscript_num)
@@ -590,7 +538,7 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
     # print "Test " + str(int(manuscript_num) in manuscripts)
     # print "Check status is " + str(check_status)
 
-    if (int(manuscript_num) in manuscripts) and (check_status == "underReview"):
+    if (str(manuscript_num) in manuscripts) and (check_status == "underReview"):
         getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
         date = get_single_query(db, getDate)
 
@@ -616,11 +564,11 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
 
         insert_query(db, update_feedback, data_feedback)
 
-        if new_status == "rejected":
-            print("rejected")
+        if(new_status == "rejected"):
+            print "rejected"
             query = "UPDATE manuscript SET `status` = 'rejected' WHERE manuscriptID = {};".format(manuscript_num)
-        elif new_status == "accepted":
-            print("accepted")
+        elif(new_status == "accepted"):
+            print "accepted"
             query = "UPDATE manuscript SET `status` = 'accepted', dateAccepted = NOW() WHERE manuscriptID = {};".format(manuscript_num)
 
         change_query(db, query)
@@ -630,8 +578,6 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
     else:
         print("User cannot review this manuscript at this time.")
 
-
-
 def process_reviewer(db, tokens):
     command = tokens[0]
 
@@ -640,7 +586,6 @@ def process_reviewer(db, tokens):
 
     elif command == 'resign' and len(tokens) == 1:
         # prompt to enter unique ID
-
         s = raw_input('Please enter your user ID to confirm: ')
         if s == str(db.user_id):
             query = "DELETE FROM reviewer WHERE personID = " + str(db.user_id) + ';'
@@ -674,8 +619,6 @@ def process_reviewer(db, tokens):
 
     else:
         print("Invalid input. Command '" + command + "' not recognized or arguments are not appropriate.")
-
-
 
 def status_query_return(db, query):
     cursor = db.get_cursor()
@@ -720,21 +663,38 @@ def status_author(db, author_id):
 
 def status_editor(db, editor_id):
 
+    # cursor = db.get_cursor()
     query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
-    display_manuscripts(db, query)
 
+    display_manuscripts(db, query)
+    # query = "SELECT status, manuscriptID, title FROM manuscript ORDER BY status, manuscriptID"
+    # cursor.execute(query)
+    #
+    # print("Here are your current manuscripts: ")
+    # for (status, manuscriptID, title) in cursor:
+    #     print("   ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
 
 def status_reviewer(db, reviewer_id):
+    # cursor = db.get_cursor()
 
-    query = "SELECT status, manuscriptID, title FROM manuscriptWReviewers WHERE reviewer_personID = {}".format(reviewer_id)    
+    # select * from manuscriptWReviewers WHERE reviewer_personID = 422;
+    query = "SELECT status, manuscriptID, title FROM manuscriptWReviewers WHERE reviewer_personID = {}".format(reviewer_id)
+
     display_manuscripts(db, query)
-    
+    # query = "SELECT status, manuscriptID, title FROM manuscript ORDER BY status, manuscriptID"
+
+    # cursor.execute(query)
+
+    # print("Here are your current manuscripts: ")
+    # for (status, manuscriptID, title) in cursor:
+    #     print("   ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
+
 
 def display_manuscripts(db, query):
     result = submit_query_return(db, query)
 
     if result:
-        print("Manuscript detail: ")
+        print("Manuscript Detail: ")
         rows = result.strip().split('\n')
         for row in rows:
             cols         = row.strip().split('|')
@@ -742,6 +702,9 @@ def display_manuscripts(db, query):
             manuscriptID = cols[1]
             title        = cols[2]
             print("   ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
+        # cursor = db.get_cursor()
+        # print("Here are your current manuscripts: ")
+        # for (status, manuscriptID, title) in cursor:
+        #     print("   ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
     else:
         print("You have no manuscripts at this time.")
-
