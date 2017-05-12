@@ -97,28 +97,6 @@ BEGIN
 END
 /
 
-
-CREATE TRIGGER no_available_reviewer 
-BEFORE INSERT ON feedback
-FOR EACH ROW
-BEGIN
-    DECLARE difference INT;
-    DECLARE signal_message VARCHAR(128);
-    SET signal_message = 'We do not have three reviewers with the corresponding RICode.';
-    
-    -- SELECT RICode_RICodeID FROM reviewer_has_RICode WHERE ;
-    SELECT ricodeID FROM manuscript WHERE manuscriptID = new.manuscriptID;
-    MINUS
-    
-    
-    IF num_reviewers < 3 THEN
-        -- MySQL defines SQLSTATE 45000 as "unhandled user-defined exception"
-        SIGNAL SQLSTATE '45000' SET message_text = signal_message;
-    END IF;
-END
-/
-
-
 -- restore delimiter
 DELIMITER ;
 

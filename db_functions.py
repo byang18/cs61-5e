@@ -130,7 +130,7 @@ def login(db, user_id):
         # print ("results here are " + str(results))
 
         for (fname, lname) in results:
-            print("\nHello {} {}".format(fname, lname))
+            print("\nWelcome back {} {}".format(fname, lname))
 
         print "Here are your present manuscripts:\n"
         #print("Hello {} {}".format(fname, lname))
@@ -147,9 +147,13 @@ def login(db, user_id):
             print("\nHello {} {}".format(fname, lname))
 
         status_editor(db, user_id)
+
     elif db.get_user_type() == 'reviewer':
-        # TODO: get user data
-        print("Welcome back, fname, lname!")
+        query = "SELECT DISTINCT fname, lname FROM reviewerNames WHERE personID = " +  str(user_id) + ';'
+        results = get_cursor_results(db, query)
+
+        for (fname, lname) in results:
+            print("\nHello {} {}".format(fname, lname))
         status_reviewer(db, user_id) # limited to manuscripts assigned to that reviewer
 
 
@@ -160,12 +164,12 @@ def register(db, tokens):
         register_editor(db, tokens[2], tokens[3])
     elif tokens[1] == 'reviewer':
 
-        if(len(tokens) == 5):
-            register_reviewer(db, tokens[2], tokens[3])
-        elif(len(tokens) == 6):
-            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5])
-        elif(len(tokens) == 7):
+        if(len(tokens) == 7):
             register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
+        elif(len(tokens) == 8):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7])
+        elif(len(tokens) == 9):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
 
 
 def register_person(db, fname, lname):
@@ -179,7 +183,7 @@ def register_person(db, fname, lname):
 
     cursor.execute(add_person, data_add)
     personID = cursor.lastrowid
-    print("{} {} is registed with ID {} ".format(fname, lname, str(personID)))
+    print("{} {} is registered with ID {} ".format(fname, lname, str(personID)))
     con.commit()
 
     return personID
@@ -221,18 +225,54 @@ def register_editor(db, fname, lname):
     con.commit()
 
 
-def register_reviewer(db, fname, lname, *ricode):
+def register_reviewer(db, fname, lname, email, affiliation, *ricodes):
 
-    ricode1 = None
-    ricode2 = None
-    ricode3 = None
-    print fname, lname
+    personID = register_person(db, fname, lname)
 
-    if(len(ricode == 1)):
-        ricode1 = ricode[0]
+    cursor = db.get_cursor()
+    con = db.get_con()
 
-    # personID = register_person(db, fname, lname)
+    # ricode1 = None
+    # ricode2 = None
+    # ricode3 = None
     #
+    # print ricode
+    # print len(ricode)
+    # print ricode[0]
+    #
+    # if(len(ricode) >= 1):
+    #     ricode1 = ricode[0]
+    # if(len(ricode) >= 1):
+    #     ricode2 = ricode[1]
+    # if(len(ricode) >= 1):
+    #     ricode3 = ricode[2]
+
+    # print fname, lname, email, affiliation, ricode1, ricode2, ricode3
+
+    add_reviewer = ("INSERT INTO reviewer "
+                    "(personID,affiliation,email) "
+                    "VALUES (%(personID)s, %(affiliation)s, %(email)s)")
+
+    data_reviewer = {
+        'personID': personID,
+        'affiliation': affiliation,
+        'email': email,
+    }
+
+    cursor.execute(add_reviewer, data_reviewer)
+
+    for ricode in ricodes:
+        add_reviewerRICode = ("INSERT INTO reviewer_has_RICode "
+                              "(reviewer_personID,RICode_RICodeID) "
+                              "VALUES (%(reviewer_personID)s, %(RICode_RICodeID)s)")
+        data_reviewerRICode = {
+            'reviewer_personID': personID,
+            'RICode_RICodeID': ricode,
+        }
+        cursor.execute(add_reviewerRICode, data_reviewerRICode)
+
+    con.commit()
+
     # # TODO: get affiliation and email??
     # query = 'INSERT INTO reviewer (personID,affiliation,email) VALUES (' + \
     #          personID  + ',"' + affiliation + '","' + email + '");'
@@ -574,8 +614,8 @@ def status_editor(db, editor_id):
     print "Here are your current manuscripts: "
 
     cursor = db.get_cursor()
-    # query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
-    query = "SELECT status, manuscriptID, title FROM manuscript ORDER BY status, manuscriptID"
+    query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
+    # query = "SELECT status, manuscriptID, title FROM manuscript ORDER BY status, manuscriptID"
     cursor.execute(query)
 
     if(cursor.fetchone()):

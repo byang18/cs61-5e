@@ -26,7 +26,7 @@ USE `byang_db` ;
 DROP TABLE IF EXISTS `feedback`;
 DROP TABLE IF EXISTS `reviewer_has_RICode`;
 DROP TABLE IF EXISTS `secondaryAuthor`;
-DROP TABLE IF EXISTS `reviewer`;
+DROP TABLE IF EXISTS `reviewer`;-- 
 DROP TABLE IF EXISTS `manuscript`;
 DROP TABLE IF EXISTS `author`;
 DROP TABLE IF EXISTS `editor`;
@@ -621,5 +621,10 @@ DROP VIEW IF EXISTS editorNames;
 CREATE VIEW editorNames AS
 SELECT *
 FROM editor NATURAL JOIN person;
+
+DROP VIEW IF EXISTS reviewerNames;
+CREATE VIEW reviewerNames AS
+SELECT *
+FROM reviewer NATURAL JOIN person;
 
 
