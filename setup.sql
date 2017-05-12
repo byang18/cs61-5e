@@ -627,4 +627,17 @@ CREATE VIEW reviewerNames AS
 SELECT *
 FROM reviewer NATURAL JOIN person;
 
+DROP VIEW IF EXISTS manuscriptWReviewers;
+
+CREATE VIEW manuscriptWReviewers AS
+SELECT manuscript.manuscriptID, reviewer_personID, author_personID, editor_personID, title, `status`, RICodeID 
+FROM manuscript JOIN feedback ON (manuscript.manuscriptID = feedback.manuscriptID);
+
+DROP TABLE IF EXISTS `credential`;
+CREATE TABLE IF NOT EXISTS `byang_db`.`credential` (
+`personID` INT NOT NULL AUTO_INCREMENT,
+`pword` VARCHAR(30) NOT NULL,
+PRIMARY KEY (`personID`))
+ENGINE = InnoDB;
+
 
