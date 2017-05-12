@@ -1,35 +1,62 @@
-# cs61-5e
+Barry Yang and Lily Xu
+CS 61 Databases
+Lab 2 part e
+May 12, 2017
+
+
+# Running the code
+
+Execute `setup.sql` and `triggers.sql`
+
+In the command line, type:
+```
+db_driver.py
+```
 
 
 
+# Commands
+Log in
+```
+login|<id>
+```
 
-login|id
 
-
-
-AUTHOR
-register|author|fname|lname|email|address
-submit|title|affiliation|RICode|author2|author3|author4|filename
+### Author
+```
+register|author|<fname>|<lname>|<email>|<address>
+submit|<title>|<affiliation>|<RICode>|<author2>|<author3>|<author4>
 status
-retract|manuscript_id
+retract|<manuscript_id>
+```
 
 
-EDITOR
-register|editor|fname|lname
+### Editor
+```
+register|editor|<fname>|<lname>
 status
-assign|manuscript_id|reviewer_id
-reject|manuscript_id
-accept|manuscript_id
-typeset|manuscript_id|pp
-schedule|manuscript_id|issue
-publish|issue
+assign|<manuscript_id>|<reviewer_id>
+reject|<manuscript_id>
+accept|<manuscript_id>
+typeset|<manuscript_id>|<pp>
+schedule|<manuscript_id>|<issue>
+publish|<issue_year>|<issue_period>
+```
 
 
-REVIEWER
-register|reviewer|fname|lname|RICode1|RICode2|RICode3
+### Reviewer
+```
+register|reviewer|<fname>|<lname>|<RICode1>|<RICode2>|<RICode3>
+status
 resign
-reject|manuscriptID|appropriateness|clarity|methodology|contribution
-accept|manuscriptID|appropriateness|clarity|methodology|contribution
+reject|<manuscriptID>|<appropriateness>|<clarity>|<methodology>|<contribution>
+accept|<manuscriptID>|<appropriateness>|<clarity>|<methodology>|<contribution>
+```
 
+# Extra Credit
+
+### Password authentication
+
+### Authorization using `GRANT`
 
 

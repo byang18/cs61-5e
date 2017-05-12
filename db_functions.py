@@ -119,7 +119,7 @@ def login(db, user_id):
 
     results = submit_query_return(db, query)
 
-    if results != "":
+    if results != '':
         if not login_authenticate(db, user_id):
             print("Incorrect password.")
             return
@@ -197,7 +197,7 @@ def login_authenticate(db, user_id):
     # query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
     #         ' AND AES_DECRYPT(pword,"' + db.get_key() + '") = "' + pw + '";'
     query = 'SELECT * FROM credential WHERE personID = ' + str(user_id) + \
-            ' AND AES_DECRYPT(pword, @key_str) = "' + pw + '";'
+            ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
     result = get_single_query(db,query)
 
     return result != None;
@@ -236,16 +236,12 @@ def register(db, tokens):
         print('Please enter a password.')
         pw = getpass.getpass('-->')
 
-        # query    = 'INSERT INTO credential (personID, pword) VALUES (%s, AES_ENCRYPT(%s,@key_str));'
-        # data_add = (personID, user_type)
-        
-        #query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + ', AES_ENCRYPT("' + pw + '","' + db.get_key() + '"));'
-        query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + ', AES_ENCRYPT("' + pw + '",@key_str));'
+        query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + \
+                ', AES_ENCRYPT("' + pw + '",@master_key));'
         
         print pw
         print query
 
-        # cursor.execute(query, data_add)
         cursor.execute(query)
         con.commit()
 
@@ -459,9 +455,9 @@ def process_author(db, tokens):
 
         # ensure that author can only retract his/her own manuscripts
         query = "SELECT manuscriptID, author_personID FROM manuscript WHERE author_personID = " +  str(db.user_id) + " AND manuscriptID = " + str(manuscript_num) + ';'
-        cursor.execute(query)
+        result = get_single_query(db, query)
 
-        if not cursor.fetchone():
+        if not result:
             print("Sorry, you are not the author of this manuscript.")
             return
 
@@ -805,7 +801,7 @@ def status_reviewer(db, reviewer_id):
     for (status, manuscriptID, title) in cursor:
         print("   ID {} -- status: {}: '{}' ".format(manuscriptID, status, title))
 
-    
+
     # x = 5
 
     # print("{} submitted".format(x))

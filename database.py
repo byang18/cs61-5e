@@ -25,16 +25,6 @@ class Database:
 
         self.confidential = confidential
 
-    # def connect(self, server, username, password, database):
-    #     self.con = mysql.connector.connect(host=server,
-    #                                        user=username,
-    #                                        password=password,
-    #                                        database=database)
-
-    #     self.cursor = self.con.cursor();
-
-    #     print("Connected!")
-
     def get_con(self):
         return self.con
 
