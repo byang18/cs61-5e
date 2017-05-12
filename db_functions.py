@@ -36,6 +36,21 @@ def get_cursor_results(db, query):
 
     return cursor
 
+def get_single_query(db, query):
+    cursor = db.get_cursor()
+    cursor.execute(query)
+
+    # getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+    # results = get_cursor_results(db, getDate)
+
+    to_return = None
+    for row in cursor:
+        for col in row:
+            to_return = col
+            print to_return
+
+    return to_return
+
 # process query, but instead of displaying to user,
 # return output to the caller
 # NOTE: each column is delimited by a pipe '|'
@@ -83,7 +98,7 @@ def parse_input(db, string):
         elif db.get_user_type() == 'editor':
             process_editor(db, tokens)
         elif db.get_user_type() == 'reviewer':
-            process_reviewer()
+            process_reviewer(db, tokens)
     # if not logged in, must either login or register
     else:
         print("Invalid input. Please login or register.")
@@ -103,7 +118,7 @@ def login(db, user_id):
 
     # execute login
     db.change_user_id(int(user_id))
-    db.change_user_type('editor') # or 'editor' or 'reviewer'
+    db.change_user_type('reviewer') # or 'editor' or 'reviewer'
     db.log_on()
 
     # display greeting
@@ -144,7 +159,13 @@ def register(db, tokens):
     elif tokens[1] == 'editor':
         register_editor(db, tokens[2], tokens[3])
     elif tokens[1] == 'reviewer':
-        register_reviewer(db, tokens[2], tokens[3])
+
+        if(len(tokens) == 5):
+            register_reviewer(db, tokens[2], tokens[3])
+        elif(len(tokens) == 6):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5])
+        elif(len(tokens) == 7):
+            register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
 
 
 def register_person(db, fname, lname):
@@ -200,15 +221,24 @@ def register_editor(db, fname, lname):
     con.commit()
 
 
-def register_reviewer(db, fname, lname, ricode1, ricode2, ricode3):
-    personID = register_person(db, fname, lname)
+def register_reviewer(db, fname, lname, *ricode):
 
-    # TODO: get affiliation and email??
-    query = 'INSERT INTO reviewer (personID,affiliation,email) VALUES (' + \
-             personID  + ',"' + affiliation + '","' + email + '");'
-    # TODO: submit reviewer_has_RICodes???
-    # ',' + ricode1 + ',' + ricode2 + ',' + ricode3 + ');'
-    submit_query(db, query)
+    ricode1 = None
+    ricode2 = None
+    ricode3 = None
+    print fname, lname
+
+    if(len(ricode == 1)):
+        ricode1 = ricode[0]
+
+    # personID = register_person(db, fname, lname)
+    #
+    # # TODO: get affiliation and email??
+    # query = 'INSERT INTO reviewer (personID,affiliation,email) VALUES (' + \
+    #          personID  + ',"' + affiliation + '","' + email + '");'
+    # # TODO: submit reviewer_has_RICodes???
+    # # ',' + ricode1 + ',' + ricode2 + ',' + ricode3 + ');'
+    # submit_query(db, query)
 
 def insert_secondaryAuthors(manuscript_id, name, order):
     names = name.split()
@@ -339,57 +369,141 @@ def process_author(db, tokens):
 def process_editor(db, tokens):
     command = tokens[0]
 
+
+    now = datetime.datetime.now()
+
     con = db.get_con()
     cursor = db.get_cursor()
 
     if command == 'status':
         status_editor(db, db.user_id)
     elif command == 'assign' and len(tokens) == 3:
+
+        #update editorID to
+
         manuscript_num = tokens[1]
         reviewer_id = tokens[2]
 
         # should check to make sure that RICode matches
+        getManuscriptRICode = "SELECT ricodeID FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+        manuscriptRICode = get_single_query(db, getManuscriptRICode)
 
-        # query = "UPDATE manuscript SET status = `underReview` WHERE manuscriptID = " + str(manuscript_num) + ';'
-        # cursor.execute(query)
+        getReviewerRICodes = "SELECT RICode_RICodeID  from reviewer_has_RICode WHERE reviewer_personID = " + str(reviewer_id) + ';'
+        cursor.execute(getReviewerRICodes)
 
-        getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
-        results = get_cursor_results(db, getDate)
+        reviewerRICodes = []
 
-        date = None
-        for(dateReceived) in results:
-            date = dateReceived
-            print date
+        for row in cursor:
+            for col in row:
+                if(col > 0):
+                    reviewerRICodes.append(col)
+
+        print "ReviewerRICodes are " + str(reviewerRICodes)
+        print "manuscript RICode is " + str(manuscriptRICode)
+
+        if(manuscriptRICode in reviewerRICodes):
+
+            getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+            # results = get_cursor_results(db, getDate)
+            #
+            # date = None
+            # for row in results:
+            #     for (dateReceived) in row:
+            #         date = dateReceived
+            #         print date
+
+            date = get_single_query(db, getDate)
+
+            add_feedback = ("INSERT INTO feedback "
+                            "(manuscriptID,reviewer_personID,appropriateness,clarity,methodology,contribution,recommendation,dateReceived) "
+                            "VALUES (%(manuscriptID)s, %(reviewer_personID)s, NULL, NULL, NULL, NULL, NULL, %(dateReceived)s)")
+
+            data_feedback = {
+                'manuscriptID': manuscript_num,
+                'reviewer_personID': reviewer_id,
+                'dateReceived': date,
+            }
+
+            cursor.execute(add_feedback, data_feedback)
+
+            query = "UPDATE manuscript SET status = 'underReview', dateSentForReview = NOW() WHERE manuscriptID = " + str(manuscript_num) + ';'
+            cursor.execute(query)
+            # date received?
+            # insert_feedback = ""
+            print("Manuscript ID {} assigned to reviewer {}. Manuscript status set to 'underReview'".format(manuscript_num, reviewer_id))
 
 
+            con.commit()
+        else:
+            print "Invalid entry. This reviewer does not have the appropriate RICode"
 
-        # date received?
-        insert_feedback = ""
-
-
-        # cursor.commit()
-
-    elif command == 'reject':
+    elif command == 'reject' and len(tokens) == 2:
         manuscript_num  = tokens[1]
-        # TODO: set manuscript status to rejected and add timestamp
-    elif command == 'accept':
+        #date rejected
+        query = "UPDATE manuscript SET status = 'rejected' WHERE manuscriptID = " + str(manuscript_num) + ';'
+        cursor.execute(query)
+        con.commit()
+        print("Manuscript {} rejected on {}").format(manuscript_num, now.strftime("%Y-%m-%d"))
+
+    elif command == 'accept' and len(tokens) == 2:
         manuscript_num  = tokens[1]
-        # TODO: set manuscript status to accepted and add timestamp
-    elif command == 'typeset':
+        query = "UPDATE manuscript SET status = 'accepted', dateAccepted = NOW() WHERE manuscriptID = " + str(manuscript_num) + ';'
+        cursor.execute(query)
+        con.commit()
+        print("Manuscript {} accepted on {}").format(manuscript_num, now.strftime("%Y-%m-%d"))
+
+    elif command == 'typeset' and len(tokens) == 3:
         manuscript_num  = tokens[1]
         pp              = tokens[2]
-        # TODO: set manuscript status to typeset and store num pages
-    elif command == 'schedule':
-        manuscript_num  = tokens[1]
-        issue           = tokens[2]
-        # TODO: set manuscript status to scheduled and add issue page
-        # TODO: if addition of manuscript would cause issue to exceed 100 pages, schedule request should fail
-    elif command == 'publish':
-        issue           = tokens[2]
-        # TODO: for all manuscripts in issue, set status as published and record timestamp
-    else:
-        print("Invalid input. Command '" + command + "' not recognized.")
+        query = "UPDATE manuscript SET status = 'typeset', numPages = {} WHERE manuscriptID = {};".format(pp, manuscript_num)
+        cursor.execute(query)
+        con.commit()
+        print("Manuscript {} status set to 'typeset' on {}. {} pages logged").format(manuscript_num, now.strftime("%Y-%m-%d"), pp)
 
+    elif command == 'schedule' and len(tokens) == 4:
+        manuscript_num  = tokens[1]
+        issueYear       = tokens[2]
+        issuePeriod     = tokens[3]
+
+        # select manuscriptID, numPages, issue_publicationYear, issue_periodNumber from manuscript WHERE issue_publicationYear = 2017 AND issue_periodNumber = 4;
+        getNumPages = "SELECT numPages FROM manuscript WHERE issue_publicationYear = {} AND issue_periodNumber = {};".format(issueYear, issuePeriod)
+        cursor.execute(getNumPages)
+
+        page_sum = 0
+
+        for row in cursor:
+            for col in row:
+                if(col > 0):
+                    page_sum += int(col)
+
+        getNumManuscriptPage = "SELECT numPages FROM manuscript WHERE manuscriptID = {}".format(manuscript_num)
+        page = get_single_query(db, getNumManuscriptPage)
+
+        if ((page is not None) and (page + page_sum <= 100)):
+            query = "UPDATE manuscript SET status = 'scheduled', issue_publicationYear = {}, issue_periodNumber = {} WHERE manuscriptID = {};".format(issueYear, issuePeriod, manuscript_num)
+            cursor.execute(query)
+            con.commit()
+            print("Manuscript {} scheduled for issue year {}, period {}").format(manuscript_num, issueYear, issuePeriod)
+        else:
+            print "Invalid entry. Check if manuscript {} has a valid number of pages or number of pages in issue does not have any errors.".format(manuscript_num)
+
+
+    elif command == 'publish' and len(tokens) == 3:
+        issueYear       = tokens[1]
+        issuePeriod     = tokens[2]
+
+        query = "UPDATE manuscript SET status = 'published' WHERE issue_publicationYear = {} AND issue_periodNumber = {};".format(issueYear, issuePeriod)
+        cursor.execute(query)
+
+        query = "UPDATE issue SET datePrinted = NOW() WHERE publicationYear = {} AND periodNumber = {};".format(issueYear, issuePeriod)
+        cursor.execute(query)
+
+        con.commit()
+        print("Issue year {}, period {} printed on {}. Status of all corresponding manuscripts changed to 'published'").format(issueYear, issuePeriod, now.strftime("%Y-%m-%d"))
+    else:
+        print("Invalid input. Command '" + command + "' not recognized, or corresponding arguments are not correct")
+
+    # db.cleanup()
 
 def process_reviewer(db, tokens):
     command = tokens[0]
@@ -460,7 +574,8 @@ def status_editor(db, editor_id):
     print "Here are your current manuscripts: "
 
     cursor = db.get_cursor()
-    query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
+    # query = "SELECT status, manuscriptID, title FROM manuscript WHERE editor_personID = {} ORDER BY status, manuscriptID".format(editor_id)
+    query = "SELECT status, manuscriptID, title FROM manuscript ORDER BY status, manuscriptID"
     cursor.execute(query)
 
     if(cursor.fetchone()):

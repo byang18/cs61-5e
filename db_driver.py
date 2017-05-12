@@ -40,10 +40,6 @@ if __name__ == "__main__":
             parse_input(db, s)
             s = raw_input('--> ')
 
-        db.cursor.close()
-        db.con.close()
-
-
     except mysql.connector.Error as e:        # catch SQL errors
         print("SQL Error: {0}".format(e.msg))
 
