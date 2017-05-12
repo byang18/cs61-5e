@@ -21,32 +21,31 @@ if __name__ == "__main__":
     db = Database(SERVER, USERNAME, PASSWORD, DATABASE)
     # db.connect(SERVER, USERNAME, PASSWORD, DATABASE)
 
-    try:
-        print("Connection established.\n")
 
-        # query = "SELECT * FROM feedback;"
+    print("Connection established.\n")
 
-        # submit_query(db, query)
+    # query = "SELECT * FROM feedback;"
 
-        # print(submit_query_return(db, query))
-        # submit_query_return(db, query)
+    # submit_query(db, query)
 
-        print("Please input your request. Use '|' to split commands.")
-        print("  e.g. register|author|Lily|Xu|lily.18@dartmouth.edu|4774 Hinman Box, Hanover, NH 03755")
-        print("  Type 'q' or 'quit' to exit.")
-        s = raw_input('--> ')
+    # print(submit_query_return(db, query))
+    # submit_query_return(db, query)
 
-        while (s != 'quit' and s != 'q'):
+    print("Please input your request. Use '|' to split commands.")
+    print("  e.g. register|author|Lily|Xu|lily.18@dartmouth.edu|4774 Hinman Box, Hanover, NH 03755")
+    print("  Type 'q' or 'quit' to exit.")
+    s = raw_input('--> ')
+
+    while (s != 'quit' and s != 'q'):
+        try:
             parse_input(db, s)
-            s = raw_input('--> ')
+        except mysql.connector.Error as e:        # catch SQL errors
+            print("SQL Error: {0}".format(e.msg))
 
-    except mysql.connector.Error as e:        # catch SQL errors
-        print("SQL Error: {0}".format(e.msg))
-
-    except:                                   # anything else
-        print("Unexpected error: {0}".format(sys.exc_info()[0]))
-        traceback.print_exc()
-
+        except:                                   # anything else
+            print("Unexpected error: {0}".format(sys.exc_info()[0]))
+            traceback.print_exc()
+        s = raw_input('--> ')
 
     # cleanup
     try:

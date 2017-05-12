@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`reviewer` (
   CONSTRAINT `fk_reviewer_person1`
     FOREIGN KEY (`personID`)
     REFERENCES `byang_db`.`person` (`personID`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`feedback` (
   CONSTRAINT `fk_feedback_reviewer1`
     FOREIGN KEY (`reviewer_personID`)
     REFERENCES `byang_db`.`reviewer` (`personID`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`reviewer_has_RICode` (
   CONSTRAINT `fk_reviewer_has_RICode_RICode1`
     FOREIGN KEY (`RICode_RICodeID`)
     REFERENCES `byang_db`.`RICode` (`RICodeID`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -616,16 +616,6 @@ CREATE VIEW individualManuscripts AS
 SELECT personID, fname, lname, manuscriptID
 FROM LeadAuthorManuscripts
 WHERE personID = 128; # CHANGE NUMBER 
-
-DROP VIEW IF EXISTS editorNames;
-CREATE VIEW editorNames AS
-SELECT *
-FROM editor NATURAL JOIN person;
-
-DROP VIEW IF EXISTS reviewerNames;
-CREATE VIEW reviewerNames AS
-SELECT *
-FROM reviewer NATURAL JOIN person;
 
 DROP VIEW IF EXISTS manuscriptWReviewers;
 

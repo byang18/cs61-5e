@@ -94,6 +94,7 @@ BEGIN
     
     DELETE FROM `feedback` WHERE reviewer_personID = old.personID;
     DELETE FROM `reviewer_has_RICode` WHERE reviewer_personID = old.personID;
+    DELETE FROM `person` WHERE personID = old.personID;
 END
 /
 
