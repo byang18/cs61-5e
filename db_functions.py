@@ -45,6 +45,21 @@ def submit_query_return(db, query):
 
     return output
 
+def insert_query(db, query, data):
+    con     = db.get_con()
+    cursor  = db.get_cursor()
+    cursor.execute(query, data)
+    con.commit()
+
+    return cursor.lastrowid
+
+# single query, useful for insert and delete
+def change_query(db, query):
+    con     = db.get_con()
+    cursor  = db.get_cursor()
+    cursor.execute(query)
+    con.commit()
+
 
 
 # parse input from user
@@ -538,7 +553,7 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
     for row in cursor:
         for col in row:
             if(col > 0):
-                manuscripts.append(int(col))
+                manuscripts.append(str(col))
 
     # print "manuscript nums are " + str(manuscripts)
     # print "manuscript is " + str(manuscript_num)
@@ -548,7 +563,7 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
     # print "Test " + str(int(manuscript_num) in manuscripts)
     # print "Check status is " + str(check_status)
 
-    if (int(manuscript_num) in manuscripts) and (check_status == "underReview"):
+    if (str(manuscript_num) in manuscripts) and (check_status == "underReview"):
         getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
         date = get_single_query(db, getDate)
 
@@ -587,21 +602,6 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
 
     else:
         print("User cannot review this manuscript at this time.")
-
-def insert_query(db, query, data):
-    con     = db.get_con()
-    cursor  = db.get_cursor()
-    cursor.execute(query, data)
-    con.commit()
-
-    return cursor.lastrowid
-
-# single query, useful for insert and delete
-def change_query(db, query):
-    con     = db.get_con()
-    cursor  = db.get_cursor()
-    cursor.execute(query)
-    con.commit()
 
 def process_reviewer(db, tokens):
     command = tokens[0]
@@ -673,7 +673,8 @@ def status_author(db, author_id):
     query = "SELECT count FROM authorNumAccepted WHERE personID = " +  str(author_id) + ';'
     print("{} manuscripts accepted".format(status_query_return(db, query)))
 
-    # TODO: typesetting (status = typeset?)
+    query = "SELECT count FROM authorNumTypeset WHERE personID = " +  str(author_id) + ';'
+    print("{} manuscripts typeset".format(status_query_return(db, query)))
 
     query = "SELECT count FROM authorNumScheduled WHERE personID = " +  str(author_id) + ';'
     print("{} manuscripts scheduled".format(status_query_return(db, query)))
@@ -718,6 +719,7 @@ def display_manuscripts(db, query):
     result = submit_query_return(db, query)
 
     if result:
+        print("Manuscript Detail: ")
         rows = result.strip().split('\n')
         for row in rows:
             cols         = row.strip().split('|')
