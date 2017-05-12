@@ -125,6 +125,7 @@ accept|<manuscriptID>|<appropriateness>|<clarity>|<methodology>|<contribution>
 - The master key must be entered anew each time the database starts up. For encryption to work properly, the master key ought to be constant each time.
 - When a new manuscript is submitted, it is randomly assigned to an avilable editor.
 - We have not implemented certain checks of defensive programming, such as ensuring integers are valid. 
+- Keywords must be lowercase
 
 
 # Extra credit

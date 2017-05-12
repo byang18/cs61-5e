@@ -210,7 +210,7 @@ def login_authenticate(db, user_id):
             ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
     result = get_single_query(db,query)
 
-    return result != None;
+    return result != None
 
 
 
@@ -247,7 +247,7 @@ def register(db, tokens):
         query = 'INSERT INTO credential (personID, pword) VALUES (' + str(personID) + \
                 ', AES_ENCRYPT("' + pw + '",@master_key));'
 
-        change_query(query)
+        change_query(db, query)
 
 
 
