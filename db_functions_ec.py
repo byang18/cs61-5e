@@ -107,8 +107,9 @@ def login(db, user_id):
 
     if results != "":
         login_check, pw = login_authenticate(db, user_id)
-        if login_check == "false":
-            print("Incorrect password.")
+        if not login_check:
+            if(pw != "no password"):
+                print("Incorrect password.")
             return
 
         print "LOGIN USER: " + "team17_" + str(user_id)
@@ -142,8 +143,9 @@ def login(db, user_id):
     if results != '':
 
         login_check, pw = login_authenticate(db, user_id)
-        if login_check == "false":
-            print("Incorrect password.")
+        if not login_check:
+            if(pw != "no password"):
+                print("Incorrect password.")
             return
 
         print "LOGIN USER: " + "team17_" + str(user_id)
@@ -175,8 +177,10 @@ def login(db, user_id):
 
     if results != '':
         login_check, pw = login_authenticate(db, user_id)
-        if login_check == "false":
-            print("Incorrect password.")
+
+        if not login_check:
+            if(pw != "no password"):
+                print("Incorrect password.")
             return
 
         print "LOGIN USER: " + "team17_" + str(user_id)
@@ -217,7 +221,8 @@ def login_authenticate(db, user_id):
 
     # no associated password
     if not result:
-        return True
+        print("This user has no associated password. User may be locked (e.g. from resignation)")
+        return (False, "no password")
 
     # request login from user
     print('Please enter your password:')
@@ -228,12 +233,8 @@ def login_authenticate(db, user_id):
             ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
     result = get_single_query(db,query)
 
-    check = "false"
-    if result != None:
-        check = "true"
-
     # returns true if result is not none, otherwise return false
-    return (check, pw)
+    return (result != None, pw)
 
 
 
