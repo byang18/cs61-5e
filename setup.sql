@@ -73,11 +73,12 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`reviewer` (
   `personID` INT NOT NULL,
   `affiliation` VARCHAR(45) NOT NULL,
   `email` VARCHAR(80) NOT NULL,
+  `reviewer_status` VARCHAR(80) NOT NULL,
   PRIMARY KEY (`personID`),
   CONSTRAINT `fk_reviewer_person1`
     FOREIGN KEY (`personID`)
     REFERENCES `byang_db`.`person` (`personID`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -158,7 +159,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`feedback` (
   CONSTRAINT `fk_feedback_reviewer1`
     FOREIGN KEY (`reviewer_personID`)
     REFERENCES `byang_db`.`reviewer` (`personID`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -170,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `byang_db`.`reviewer_has_RICode` (
   CONSTRAINT `fk_reviewer_has_RICode_reviewer1`
     FOREIGN KEY (`reviewer_personID`)
     REFERENCES `byang_db`.`reviewer` (`personID`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_reviewer_has_RICode_RICode1`
     FOREIGN KEY (`RICode_RICodeID`)
@@ -198,7 +199,7 @@ ENGINE = InnoDB;
 
 -- credential table, for passwords
 DROP TABLE IF EXISTS `credential`;      -- PART E EXTRA CREDIT
-CREATE TABLE IF NOT EXISTS `lilyx_db`.`credential` (
+CREATE TABLE IF NOT EXISTS `byang_db`.`credential` (
   `personID` INT NOT NULL AUTO_INCREMENT,
   `pword` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`personID`))
@@ -381,12 +382,13 @@ INSERT INTO `issue` (`publicationYear`,`periodNumber`,`datePrinted`) VALUES (201
 INSERT INTO `issue` (`publicationYear`,`periodNumber`,`datePrinted`) VALUES (2017,1,"2016-01-16"),(2017,2,"2017-04-25"),(2017,3,"2017-09-01"),(2017,4,"2017-10-05");
 INSERT INTO `issue` (`publicationYear`,`periodNumber`,`datePrinted`) VALUES (2018,1,"2018-02-07"),(2018,2,"2018-05-18"),(2018,3,"2012-08-26"),(2018,4,"2018-11-06");
 
+ --  `reviewer_status` VARCHAR(80) NOT NULL,
 
 
 -- reviewer table
-INSERT INTO `reviewer` (`personID`,`affiliation`,`email`) VALUES (400,"At Velit Corporation","eu.eleifend@ornareplacerat.com"),(401,"In At Pede Ltd","Donec@congue.co.uk"),(402,"Gravida Aliquam Tincidunt Institute","gravida.Aliquam@utnullaCras.co.uk"),(403,"Enim Sed Nulla Corp.","odio.Phasellus.at@nec.org"),(404,"Suspendisse Aliquet Molestie Industries","mi.lorem@tinciduntpede.org"),(405,"Metus Vitae Velit Incorporated","Integer.id@felis.co.uk"),(406,"Quisque Company","est.congue@metusAenean.com"),(407,"Fames LLC","mauris@tincidunt.ca"),(408,"Diam Vel Corporation","vitae.risus.Duis@euultricessit.ca"),(409,"In PC","auctor.non.feugiat@lorem.ca");
-INSERT INTO `reviewer` (`personID`,`affiliation`,`email`) VALUES (410,"Dui Fusce Aliquam Limited","Fusce.dolor@nisiCumsociis.com"),(411,"Auctor Corp.","sit.amet@orciPhasellusdapibus.edu"),(412,"Magnis Inc.","mollis@ac.edu"),(413,"Mauris Elit Dictum PC","ipsum@vulputatemauris.org"),(414,"Purus Ltd","fermentum@habitantmorbi.co.uk"),(415,"Magna Incorporated","aliquam.adipiscing@utpellentesque.ca"),(416,"Accumsan Interdum Industries","dui.augue@antelectusconvallis.net"),(417,"Ridiculus Mus Proin Corporation","eget.ipsum.Suspendisse@dapibus.net"),(418,"Mauris Blandit Enim Foundation","ipsum.cursus.vestibulum@amet.ca"),(419,"Pharetra Quisque Inc.","dis.parturient@Duisa.com");
-INSERT INTO `reviewer` (`personID`,`affiliation`,`email`) VALUES (420,"Egestas Incorporated","rhoncus.Nullam.velit@ullamcorperviverra.ca"),(421,"Curabitur Egestas PC","Aliquam@etmagnaPraesent.co.uk"), (422,"Tempus Risus Donec Inc.","facilisis.Suspendisse.commodo@bibendumDonec.ca"),(423,"Cursus Luctus LLP","amet.luctus.vulputate@sociisnatoque.ca"),(424,"Fermentum Arcu Company","fermentum.vel@nullaInteger.net"),(425,"Sed Ltd","mauris.Integer.sem@sodales.ca"),(426,"Et Risus Institute","risus.odio@enimCurabitur.ca"),(427,"Ultricies Ornare Elit Consulting","Cras@sociosquadlitora.ca"),(428,"Leo In Lobortis Limited","ut.aliquam.iaculis@idante.edu"),(429,"Mauris Vestibulum Ltd","diam.Sed@non.co.uk");
+INSERT INTO `reviewer` (`personID`,`affiliation`,`email`,`reviewer_status`) VALUES (400,"At Velit Corporation","eu.eleifend@ornareplacerat.com","active"),(401,"In At Pede Ltd","Donec@congue.co.uk","active"),(402,"Gravida Aliquam Tincidunt Institute","gravida.Aliquam@utnullaCras.co.uk","active"),(403,"Enim Sed Nulla Corp.","odio.Phasellus.at@nec.org","active"),(404,"Suspendisse Aliquet Molestie Industries","mi.lorem@tinciduntpede.org","active"),(405,"Metus Vitae Velit Incorporated","Integer.id@felis.co.uk","active"),(406,"Quisque Company","est.congue@metusAenean.com","active"),(407,"Fames LLC","mauris@tincidunt.ca","active"),(408,"Diam Vel Corporation","vitae.risus.Duis@euultricessit.ca","active"),(409,"In PC","auctor.non.feugiat@lorem.ca","active");
+INSERT INTO `reviewer` (`personID`,`affiliation`,`email`,`reviewer_status`) VALUES (410,"Dui Fusce Aliquam Limited","Fusce.dolor@nisiCumsociis.com","active"),(411,"Auctor Corp.","sit.amet@orciPhasellusdapibus.edu","active"),(412,"Magnis Inc.","mollis@ac.edu","active"),(413,"Mauris Elit Dictum PC","ipsum@vulputatemauris.org","active"),(414,"Purus Ltd","fermentum@habitantmorbi.co.uk","active"),(415,"Magna Incorporated","aliquam.adipiscing@utpellentesque.ca","active"),(416,"Accumsan Interdum Industries","dui.augue@antelectusconvallis.net","active"),(417,"Ridiculus Mus Proin Corporation","eget.ipsum.Suspendisse@dapibus.net","active"),(418,"Mauris Blandit Enim Foundation","ipsum.cursus.vestibulum@amet.ca","active"),(419,"Pharetra Quisque Inc.","dis.parturient@Duisa.com","active");
+INSERT INTO `reviewer` (`personID`,`affiliation`,`email`,`reviewer_status`) VALUES (420,"Egestas Incorporated","rhoncus.Nullam.velit@ullamcorperviverra.ca","active"),(421,"Curabitur Egestas PC","Aliquam@etmagnaPraesent.co.uk","active"), (422,"Tempus Risus Donec Inc.","facilisis.Suspendisse.commodo@bibendumDonec.ca","active"),(423,"Cursus Luctus LLP","amet.luctus.vulputate@sociisnatoque.ca","active"),(424,"Fermentum Arcu Company","fermentum.vel@nullaInteger.net","active"),(425,"Sed Ltd","mauris.Integer.sem@sodales.ca","active"),(426,"Et Risus Institute","risus.odio@enimCurabitur.ca","active"),(427,"Ultricies Ornare Elit Consulting","Cras@sociosquadlitora.ca","active"),(428,"Leo In Lobortis Limited","ut.aliquam.iaculis@idante.edu","active"),(429,"Mauris Vestibulum Ltd","diam.Sed@non.co.uk","active");
 
 
 
@@ -713,6 +715,7 @@ BEGIN
     END IF;
 END
 /
+DELIMITER ;
 
 
 -- -----------------------------------------------------
@@ -723,22 +726,26 @@ END
 -- “submitted” state and an apprpriate exception message displayed.
 
 
+DELIMITER /
 CREATE TRIGGER reviewer_resign
-BEFORE DELETE ON reviewer
+BEFORE UPDATE ON reviewer
 FOR EACH ROW
 BEGIN
-    IF (EXISTS (SELECT reviewer_personID FROM onlyOneReviewer
-                WHERE reviewer_personID = old.personID))
-        THEN
-        UPDATE manuscript
-        SET manuscript.`status` = "submitted"
-        WHERE manuscript.manuscriptID
-        IN (SELECT manuscriptID FROM onlyThreeReviewers WHERE reviewer_personID = old.personID);
-    END IF;
+	IF new.reviewer_status = "resigned"
+    THEN
+		IF (EXISTS (SELECT reviewer_personID FROM onlyThreeReviewers
+					WHERE reviewer_personID = new.personID))
+			THEN
+			UPDATE manuscript
+			SET manuscript.`status` = "received"
+			WHERE manuscript.manuscriptID
+			IN (SELECT manuscriptID FROM onlyThreeReviewers WHERE reviewer_personID = old.personID);
+		END IF;
+	END IF;
     
-    DELETE FROM `feedback` WHERE reviewer_personID = old.personID;
-    DELETE FROM `reviewer_has_RICode` WHERE reviewer_personID = old.personID;
-    DELETE FROM `person` WHERE personID = old.personID;
+--  DELETE FROM `feedback` WHERE reviewer_personID = old.personID;
+-- 	DELETE FROM `reviewer_has_RICode` WHERE reviewer_personID = old.personID;
+-- 	DELETE FROM `person` WHERE personID = old.personID;
 END
 /
 

@@ -9,7 +9,7 @@
 import datetime         # get current date
 import random
 import getpass          # raw_input substitute for passwords
-
+from random import randint
 
 def get_cursor_results(db, query):
     cursor = db.get_cursor()
@@ -76,7 +76,7 @@ def parse_input(db, string):
     # log in user
     if tokens[0] == 'login' and len(tokens) > 1:
         user_id = tokens[1]
-        login(db, user_id)
+        return login(db, user_id)
     # register new user
     elif tokens[0] == 'register' and len(tokens) > 1:
         register(db, tokens)
@@ -106,9 +106,16 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != "":
-        if not login_authenticate(db, user_id):
+        login_check, pw = login_authenticate(db, user_id)
+        if not login_check:
             print("Incorrect password.")
             return
+
+        print "LOGIN USER: " + "team17_" + str(user_id)
+        print "PASSWORD : " + pw
+
+        # db.change_user("team17_" + str(user_id), str(pw))
+        store_info = ["team17_" + str(user_id), str(pw), str(user_id), "author"]
 
         results = submit_query_return(db, query)
         results = results.strip().split('|')
@@ -125,7 +132,7 @@ def login(db, user_id):
 
         status_author(db, user_id)
 
-        return
+        return store_info
 
     # is the user an editor?
     query = "SELECT fname, lname FROM editor JOIN person ON editor.personID " + \
@@ -209,7 +216,8 @@ def login_authenticate(db, user_id):
             ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
     result = get_single_query(db,query)
 
-    return result != None
+    # returns true if result is not none, otherwise return false
+    return (result != None, pw)
 
 
 
@@ -247,6 +255,73 @@ def register(db, tokens):
                 ', AES_ENCRYPT("' + pw + '",@master_key));'
 
         change_query(db, query)
+
+        # DROP USER IF EXISTS 'team17_300';
+        # CREATE USER 'team17_300' IDENTIFIED BY 'password';
+
+        query = "DROP USER IF EXISTS 'team17_" + str(personID) + "';"
+        print "1st: " + query
+        change_query(db, query)
+
+        query = "CREATE USER 'team17_{}' IDENTIFIED BY '{}';".format(personID, pw)
+        change_query(db, query)
+        print "2nd: " + query
+
+        query = "GRANT SELECT ON byang_db.authorNumSubmitted TO 'team17_{}';".format(personID)
+        change_query(db, query)
+
+        change_query(db, "FLUSH PRIVILEGES;")
+
+        if user_type == 'author':
+
+            # EXTRA CREDIT QUERY: INSERT to create a new manuscript
+            query = "GRANT INSERT ON byang_db.manuscript TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            # to help with SUBMIT
+            query = "GRANT SELECT ON byang_db.editor TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT INSERT ON byang_db.secondaryAuthor TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT ALL PRIVILEGES ON byang_db.author TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "CREATE VIEW view_as{} AS SELECT author_personID, manuscriptID, status, title FROM manuscript WHERE author_personID = {};".format(personID, personID)
+            change_query(db, query)
+
+            # EXTRA CREDIT QUERY: SELECT only on Title and Status of authors own manuscripts
+            query = "GRANT SELECT ON byang_db.view_as{} TO 'team17_{}';".format(personID, personID)
+            change_query(db, query)
+
+            #miscellaneous
+            query = "GRANT SELECT ON byang_db.authorNumSubmitted TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumUnderReview TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumRejected TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumAccepted TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumTypeset TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumScheduled TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.authorNumPublished TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+        elif user_type == 'editor':
+            query = "GRANT ALL PRIVILEGES ON byang_db.* TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+
         print('User registered successfully')
 
 
@@ -262,7 +337,20 @@ def register_person(db, fname, lname):
     return personID
 
 
+# def create_user_db(db):
+#
+#     db.ge
+#
+#     query = "DROP USER IF EXISTS 'team17_" + str(db.user_id) + "'@'sunapee';"
+#     cursor.
+
+
 def register_author(db, fname, lname, email, address):
+
+    # Over here insert the thing
+    # DROP USER IF EXISTS 'team17_100'@'sunapee';
+    # CREATE USER 'team17_100'@'sunapee' IDENTIFIED BY 'password';
+
     personID = register_person(db, fname, lname)
 
     add_author = ("INSERT INTO author "
@@ -627,6 +715,13 @@ def process_reviewer(db, tokens):
             query = "UPDATE reviewer SET reviewer_status = 'resigned' WHERE personID = " + str(db.user_id) + ';'
             change_query(db, query)
 
+            random_num = randint(0,1000)
+
+            # locks the user by creating a random password
+            query = 'INSERT INTO credential (personID, pword) VALUES (' + str(db.user_id) + \
+                    ', AES_ENCRYPT("' + str(random_num) + '",@master_key));'
+            change_query(db, query)
+
             print("Thank you for your service!")
 
             db.log_off()
@@ -693,7 +788,7 @@ def status_author(db, author_id):
     query = "SELECT count FROM authorNumPublished WHERE personID = " +  str(author_id) + ';'
     print("{} manuscripts published\n".format(status_query_return(db, query)))
 
-    query = "SELECT status, manuscriptID, title FROM manuscript WHERE author_personID = {} ORDER BY status, manuscriptID".format(author_id)
+    query = "SELECT status, manuscriptID, title FROM byang_db.view_as{} ORDER BY status, manuscriptID".format(author_id)
     display_manuscripts(db, query)
 
 
