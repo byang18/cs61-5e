@@ -139,3 +139,8 @@ All newly registered users will be required to enter a password, which is stored
 
 
 ### Authorization using `GRANT`
+Upon registration, a new user is created in the system. The user's name will be Team17_x, where x is the personID of the new user. Several permissions are granted to the user. In the comments are what grant authorization is given for the extra credit, although additional permissions were given in order for the rest of the database front-end to work (ideally, all queries should be rewritten such that it's in line with the grants or makes sense in real life)
+
+Once a user logs into the system, their credentials are inputted into the system, and they will reconnect with the database with their new credentials.
+
+When a reviewer resigns, a randomly generated number will be inputted as a new password, and they will be locked out of the system. All their prior information is preserved.
