@@ -9,8 +9,8 @@ DROP USER IF EXISTS 'youtuber';
 CREATE USER 'youtuber' IDENTIFIED BY '7webster';
 FLUSH PRIVILEGES;
 
-GRANT INSERT ON byang_db.manuscript TO 'team17_100'@'sunapee';
-GRANT SELECT ON byang_db.manuscript TO 'team17_100'@'sunapee'; -- if author is author of manuscript
+GRANT INSERT ON byang_db.manuscript TO 'team17_100';
+GRANT SELECT ON byang_db.manuscript TO 'team17_100'; -- if author is author of manuscript
 
 -- reload all privileges
 
@@ -49,7 +49,6 @@ GRANT ALL PRIVILEGES ON lilyx_db.feedback TO 'team17_400'@'sunapee';
 -- Ensure that a resigned reviewer can no longer login, 
 -- but all the information about that reviewer and any completed 
 -- reviews is retained.
-
 
 
 

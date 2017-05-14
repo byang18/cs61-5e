@@ -6,9 +6,9 @@ May 12, 2017
 
 # Overview
 
-This database is a manuscript management system for the Journal of E-commerce Research Knowledge. There are three types of users: author, editor, reviewer. 
+This database is a manuscript management system for the Journal of E-commerce Research Knowledge. There are three types of users: author, editor, reviewer.
 
-Our management system consists of: 
+Our management system consists of:
 - `setup.sql` creates the tables, views, triggers, and initial inserts
 - `database.py` defines a class to establish the specific database
 - `db_driver.py` runs the database management system
@@ -17,7 +17,7 @@ Our management system consists of:
 
 # Running the code
 
-Execute `setup.sql` to create the tables, views, triggers, and insert initial data. 
+Execute `setup.sql` to create the tables, views, triggers, and insert initial data.
 
 To run the front-end application, execute `db_driver.py` by entering the following in the command line:
 ```
@@ -30,7 +30,7 @@ db = Database(SERVER, USERNAME, PASSWORD, DATABASE, confidential=True)
 ```
 to read `confidential=False`.
 
-From there, the user may type in an indefinite number of commands, which are explained below. At any point, the user may type 'q' or 'quit' to exit the management system. 
+From there, the user may type in an indefinite number of commands, which are explained below. At any point, the user may type 'q' or 'quit' to exit the management system.
 
 
 # Commands
@@ -121,10 +121,13 @@ accept|<manuscriptID>|<appropriateness>|<clarity>|<methodology>|<contribution>
 - The title of a manuscript cannot contain apostrophes or quotations marks ` "
 - No inputs can include the pipe character `|`
 - The secondary author name cannot include spaces in the first name or last name
-- There is no "log out" functionality; an active user is logged out only when a different user is logged in. 
+- There is no "log out" functionality; an active user is logged out only when a different user is logged in.
 - The master key must be entered anew each time the database starts up. For encryption to work properly, the master key ought to be constant each time.
 - When a new manuscript is submitted, it is randomly assigned to an avilable editor.
-- We have not implemented certain checks of defensive programming, such as ensuring integers are valid. 
+- We have not implemented certain checks of defensive programming, such as ensuring integers are valid.
+- Does not accept RICodes outside what was provided by the professor
+- To switch users, we must log out
+- For extra, inserted data cannot be used
 
 
 # Extra credit
@@ -132,9 +135,7 @@ accept|<manuscriptID>|<appropriateness>|<clarity>|<methodology>|<contribution>
 ### Password authentication
 Upon starting the system, the user is prompted to enter a master key. This key can be any string.
 
-All newly registered users will be required to enter a password, which is stored in the database under the "credential" table. The passwords are encrypted in the server using `AES_ENCRYPT` and `AES_DECRYPT`. Subsequently, the user will be required to enter their password each time upon logging in. 
+All newly registered users will be required to enter a password, which is stored in the database under the "credential" table. The passwords are encrypted in the server using `AES_ENCRYPT` and `AES_DECRYPT`. Subsequently, the user will be required to enter their password each time upon logging in.
 
 
 ### Authorization using `GRANT`
-
-

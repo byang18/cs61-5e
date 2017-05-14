@@ -107,14 +107,13 @@ def login(db, user_id):
 
     if results != "":
         login_check, pw = login_authenticate(db, user_id)
-        if not login_check:
+        if login_check == "false":
             print("Incorrect password.")
             return
 
         print "LOGIN USER: " + "team17_" + str(user_id)
         print "PASSWORD : " + pw
 
-        # db.change_user("team17_" + str(user_id), str(pw))
         store_info = ["team17_" + str(user_id), str(pw), str(user_id), "author"]
 
         results = submit_query_return(db, query)
@@ -141,9 +140,16 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != '':
-        if not login_authenticate(db, user_id):
+
+        login_check, pw = login_authenticate(db, user_id)
+        if login_check == "false":
             print("Incorrect password.")
             return
+
+        print "LOGIN USER: " + "team17_" + str(user_id)
+        print "PASSWORD : " + pw
+
+        store_info = ["team17_" + str(user_id), str(pw), str(user_id), "editor"]
 
         results = submit_query_return(db, query)
         results = results.strip().split('|')
@@ -159,7 +165,7 @@ def login(db, user_id):
 
         status_editor(db, user_id)
 
-        return
+        return store_info
 
     # is the user a reviewer?
     query = "SELECT fname, lname FROM reviewer JOIN person ON reviewer.personID " + \
@@ -168,9 +174,15 @@ def login(db, user_id):
     results = submit_query_return(db, query)
 
     if results != '':
-        if not login_authenticate(db, user_id):
+        login_check, pw = login_authenticate(db, user_id)
+        if login_check == "false":
             print("Incorrect password.")
             return
+
+        print "LOGIN USER: " + "team17_" + str(user_id)
+        print "PASSWORD : " + pw
+
+        store_info = ["team17_" + str(user_id), str(pw), str(user_id), "reviewer"]
 
         results = submit_query_return(db, query)
         results = results.strip().split('|')
@@ -187,7 +199,7 @@ def login(db, user_id):
         # TODO: everything should be limited to manuscripts assigned to that reviewer
         status_reviewer(db, user_id)
 
-        return
+        return store_info
 
     # no user corresponds to given id
     print('ERROR: No user exists corresponding to ID ' + str(user_id) + '.')
@@ -216,8 +228,12 @@ def login_authenticate(db, user_id):
             ' AND AES_DECRYPT(pword, @master_key) = "' + pw + '";'
     result = get_single_query(db,query)
 
+    check = "false"
+    if result != None:
+        check = "true"
+
     # returns true if result is not none, otherwise return false
-    return (result != None, pw)
+    return (check, pw)
 
 
 
@@ -239,7 +255,7 @@ def register(db, tokens):
         elif len(tokens) == 9:
             personID = register_reviewer(db, tokens[2], tokens[3], tokens[4], tokens[5], tokens[6], tokens[7], tokens[8])
         else:
-            print("ERROR: Invalid input. Too many arguments.")
+            print("ERROR: Invalid input. Incorrect number of arguments.")
             return
 
     else:
@@ -272,10 +288,21 @@ def register(db, tokens):
 
         change_query(db, "FLUSH PRIVILEGES;")
 
+        # prevent a view not created
+        query = "DROP VIEW IF EXISTS view_as{};".format(personID)
+        change_query(db, query)
+
         if user_type == 'author':
 
             # EXTRA CREDIT QUERY: INSERT to create a new manuscript
             query = "GRANT INSERT ON byang_db.manuscript TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "CREATE VIEW view_as{} AS SELECT author_personID, manuscriptID, status, title FROM manuscript WHERE author_personID = {};".format(personID, personID)
+            change_query(db, query)
+
+            # EXTRA CREDIT QUERY: SELECT only on Title and Status of authors own manuscripts
+            query = "GRANT SELECT ON byang_db.view_as{} TO 'team17_{}';".format(personID, personID)
             change_query(db, query)
 
             # to help with SUBMIT
@@ -288,14 +315,7 @@ def register(db, tokens):
             query = "GRANT ALL PRIVILEGES ON byang_db.author TO 'team17_{}';".format(personID)
             change_query(db, query)
 
-            query = "CREATE VIEW view_as{} AS SELECT author_personID, manuscriptID, status, title FROM manuscript WHERE author_personID = {};".format(personID, personID)
-            change_query(db, query)
-
-            # EXTRA CREDIT QUERY: SELECT only on Title and Status of authors own manuscripts
-            query = "GRANT SELECT ON byang_db.view_as{} TO 'team17_{}';".format(personID, personID)
-            change_query(db, query)
-
-            #miscellaneous
+            # miscellaneous
             query = "GRANT SELECT ON byang_db.authorNumSubmitted TO 'team17_{}';".format(personID)
             change_query(db, query)
 
@@ -318,9 +338,56 @@ def register(db, tokens):
             change_query(db, query)
 
         elif user_type == 'editor':
+
+            # EXTRA CREDIT: query all access
             query = "GRANT ALL PRIVILEGES ON byang_db.* TO 'team17_{}';".format(personID)
             change_query(db, query)
 
+        elif user_type == 'reviewer':
+
+            query = ("CREATE VIEW view_as{} AS SELECT * FROM manuscript WHERE manuscriptID IN "
+                     "(SELECT DISTINCT manuscript.manuscriptID FROM manuscript "
+                     "JOIN feedback ON (manuscript.manuscriptID = feedback.manuscriptID) "
+                     "WHERE reviewer_personID = {});").format(personID, personID)
+            change_query(db, query)
+
+            # EXTRA CREDIT QUERY: SELECT only manuscripts in which reviewer has view
+            query = "GRANT SELECT ON byang_db.view_as{} TO 'team17_{}';".format(personID, personID)
+            change_query(db, query)
+
+            # EXTRA CREDIT QUERY: INSERT on feedback
+            query = "GRANT INSERT ON byang_db.feedback TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            # This makes sense, as reviewer should have right to look at, update, and insert new data.
+            # A better way would've been to make a separate view
+            query = "GRANT ALL PRIVILEGES ON byang_db.feedback TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            # Helper to make other queries work
+            query = "GRANT SELECT ON byang_db.manuscriptWReviewers TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT UPDATE ON byang_db.view_as{} TO 'team17_{}';".format(personID, personID)
+            change_query(db, query)
+
+            query = "GRANT UPDATE ON byang_db.manuscript TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.manuscript TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT UPDATE ON byang_db.reviewer TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT UPDATE ON byang_db.credential TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.reviewer TO 'team17_{}';".format(personID)
+            change_query(db, query)
+
+            query = "GRANT SELECT ON byang_db.credential TO 'team17_{}';".format(personID)
+            change_query(db, query)
 
         print('User registered successfully')
 
@@ -656,11 +723,11 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
             if col > 0:
                 manuscripts.append(int(col))
 
-    getManuscriptStatus  = "SELECT `status` from manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+    getManuscriptStatus  = "SELECT `status` from byang_db.view_as{} WHERE manuscriptID = ".format(db.user_id) + str(manuscript_num) + ';'
     check_status = get_single_query(db, getManuscriptStatus)
 
     if (int(manuscript_num) in manuscripts) and (check_status == "underReview"):
-        getDate = "SELECT dateReceived FROM manuscript WHERE manuscriptID = " + str(manuscript_num) + ';'
+        getDate = "SELECT dateReceived FROM byang_db.view_as{} WHERE manuscriptID = ".format(db.user_id) + str(manuscript_num) + ';'
         date = get_single_query(db, getDate)
 
         update_feedback = ("UPDATE feedback "
@@ -686,10 +753,8 @@ def submit_feedback(db, manuscript_num, appropriateness, clarity, methodology, c
         insert_query(db, update_feedback, data_feedback)
 
         if new_status == "rejected":
-            print("rejected")
             query = "UPDATE manuscript SET `status` = 'rejected' WHERE manuscriptID = {};".format(manuscript_num)
         elif new_status == "accepted":
-            print("accepted")
             query = "UPDATE manuscript SET `status` = 'accepted', dateAccepted = NOW() WHERE manuscriptID = {};".format(manuscript_num)
 
         change_query(db, query)
@@ -718,8 +783,8 @@ def process_reviewer(db, tokens):
             random_num = randint(0,1000)
 
             # locks the user by creating a random password
-            query = 'INSERT INTO credential (personID, pword) VALUES (' + str(db.user_id) + \
-                    ', AES_ENCRYPT("' + str(random_num) + '",@master_key));'
+            query = 'UPDATE credential SET pword = AES_ENCRYPT("{}",@master_key) WHERE personID = {};'.format(str(random_num), str(db.user_id))
+            print query
             change_query(db, query)
 
             print("Thank you for your service!")
